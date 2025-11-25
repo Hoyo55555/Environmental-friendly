@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>閱讀偵探團：行動的水滴 (教師控場版)</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; user-select: none; }
+        .slide-enter { animation: slideIn 0.5s ease-out; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .btn-active:active { transform: scale(0.95); }
+        ::-webkit-scrollbar { display: none; }
+        /* 抽籤動畫 */
+        .slot-machine { animation: slotSpin 0.1s infinite; }
+        @keyframes slotSpin {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 overflow-hidden">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- SVG 圖示組件 ---
+        const Icons = {
+            ArrowLeft: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>,
+            ArrowRight: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>,
+            Search: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+            Book: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
+            Check: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="20 6 9 17 4 12"/></svg>,
+            X: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+            Sort: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M11 5h10"/><path d="M11 9h7"/><path d="M11 13h4"/><path d="M3 17l3 3 3-3"/><path d="M6 18V4"/></svg>,
+            Chart: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+            Users: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+            Award: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>,
+            XCircle: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>,
+            RefreshCcw: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 2v6h6"/><path d="M21 12A9 9 0 0 0 6 5.3L3 8"/><path d="M21 22v-6h-6"/><path d="M3 12a9 9 0 0 0 15 6.7l3-2.7"/></svg>,
+            Plus: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+            Minus: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+            Dice: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 8h.01"/><path d="M8 8h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M12 12h.01"/></svg>,
+            MapPin: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+            HelpCircle: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+            Target: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
+            BarChart: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>,
+            PieChart: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>,
+            Timer: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        };
+
+        // --- 全局導航 ---
+        const Navbar = ({ current, total, next, prev }) => (
+            <div className="fixed bottom-0 w-full bg-white border-t border-gray-200 p-4 flex justify-between items-center shadow-lg z-50">
+                <button onClick={prev} disabled={current === 0} className={`flex items-center gap-2 px-6 py-3 rounded-full text-xl font-bold transition ${current === 0 ? 'bg-gray-200 text-gray-400' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}>
+                    <Icons.ArrowLeft /> 上一關
+                </button>
+                <div className="text-2xl font-black text-blue-600">
+                    關卡：{current} / {total - 2}
+                </div>
+                <button onClick={next} disabled={current === total - 1} className={`flex items-center gap-2 px-6 py-3 rounded-full text-xl font-bold transition ${current === total - 1 ? 'bg-gray-200 text-gray-400' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg btn-active'}`}>
+                    下一關 <Icons.ArrowRight />
+                </button>
+            </div>
+        );
+
+        // --- 抽籤組件 (懸浮按鈕) ---
+        const LotteryWidget = () => {
+            const [isOpen, setIsOpen] = useState(false);
+            const [stage, setStage] = useState('idle'); // idle, rollingRow, resultRow, rollingSeat, resultSeat
+            const [row, setRow] = useState(1);
+            const [seat, setSeat] = useState(1);
+
+            const startRoll = (type) => {
+                if (type === 'row') setStage('rollingRow');
+                else setStage('rollingSeat');
+                
+                let count = 0;
+                const maxCount = 20; // 滾動次數
+                const interval = setInterval(() => {
+                    const num = Math.floor(Math.random() * 6) + 1;
+                    if (type === 'row') setRow(num);
+                    else setSeat(num);
+                    
+                    count++;
+                    if (count > maxCount) {
+                        clearInterval(interval);
+                        if (type === 'row') setStage('resultRow');
+                        else setStage('resultSeat');
+                    }
+                }, 80);
+            };
+
+            const reset = () => {
+                setStage('idle');
+                setRow(1);
+                setSeat(1);
+            };
+
+            return (
+                <>
+                    {/* 懸浮按鈕 */}
+                    <button 
+                        onClick={() => setIsOpen(true)}
+                        className="fixed top-4 right-4 z-50 bg-pink-500 text-white p-4 rounded-full shadow-xl hover:bg-pink-600 hover:scale-110 transition transform border-4 border-white"
+                        title="隨機抽籤"
+                    >
+                        <Icons.Dice size={32} />
+                    </button>
+
+                    {/* 抽籤 Modal */}
+                    {isOpen && (
+                        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center backdrop-blur-sm">
+                            <div className="bg-white rounded-3xl p-8 w-[500px] shadow-2xl text-center relative border-4 border-pink-200 animate-bounce-in">
+                                <button onClick={() => setIsOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                                    <Icons.XCircle size={32} />
+                                </button>
+                                
+                                <h3 className="text-3xl font-black text-pink-600 mb-8 flex justify-center items-center gap-2">
+                                    <Icons.Dice /> 幸運抽籤機
+                                </h3>
+
+                                <div className="flex gap-6 justify-center mb-10">
+                                    {/* Row Box */}
+                                    <div className={`w-40 h-48 rounded-2xl border-4 flex flex-col items-center justify-center ${stage === 'rollingRow' ? 'border-pink-400 bg-pink-50' : (stage !== 'idle' ? 'border-pink-600 bg-pink-100' : 'border-slate-200 bg-slate-50')}`}>
+                                        <span className="text-slate-500 font-bold text-lg mb-2">第幾排</span>
+                                        <span className={`text-7xl font-black ${stage === 'rollingRow' ? 'text-pink-400 blur-sm' : 'text-pink-600'}`}>
+                                            {row}
+                                        </span>
+                                    </div>
+
+                                    {/* Seat Box */}
+                                    <div className={`w-40 h-48 rounded-2xl border-4 flex flex-col items-center justify-center ${stage === 'rollingSeat' ? 'border-blue-400 bg-blue-50' : (stage === 'resultSeat' ? 'border-blue-600 bg-blue-100' : 'border-slate-200 bg-slate-50')}`}>
+                                        <span className="text-slate-500 font-bold text-lg mb-2">第幾號</span>
+                                        <span className={`text-7xl font-black ${stage === 'rollingSeat' ? 'text-blue-400 blur-sm' : 'text-blue-600'}`}>
+                                            {seat === '?' ? '?' : seat}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-center gap-4">
+                                    {stage === 'idle' && (
+                                        <button onClick={() => startRoll('row')} className="bg-pink-500 text-white px-8 py-3 rounded-full text-2xl font-bold hover:bg-pink-600 shadow-lg w-full">
+                                            抽排數！
+                                        </button>
+                                    )}
+                                    {stage === 'resultRow' && (
+                                        <button onClick={() => startRoll('seat')} className="bg-blue-500 text-white px-8 py-3 rounded-full text-2xl font-bold hover:bg-blue-600 shadow-lg w-full">
+                                            抽座號！
+                                        </button>
+                                    )}
+                                    {stage === 'resultSeat' && (
+                                        <button onClick={reset} className="bg-slate-500 text-white px-8 py-3 rounded-full text-2xl font-bold hover:bg-slate-600 shadow-lg w-full">
+                                            再抽一次
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </>
+            );
+        };
+
+        // --- 頁面組件 ---
+
+        // 0. 封面
+        const CoverSlide = ({ onStart }) => (
+            <div className="h-screen flex flex-col items-center justify-center bg-gradient-to-br from-cyan-500 to-blue-600 text-white p-8 slide-enter">
+                <div className="bg-white/20 p-10 rounded-full mb-8 backdrop-blur-sm animate-pulse">
+                    <Icons.Search size={100} color="white" />
+                </div>
+                <h1 className="text-7xl font-black mb-6 tracking-wider drop-shadow-lg">閱讀偵探團</h1>
+                <h2 className="text-4xl font-bold mb-12 text-cyan-100">任務：解鎖行動密碼</h2>
+                <div className="bg-white/10 rounded-2xl p-8 backdrop-blur-md mb-12 max-w-3xl text-center border border-white/30">
+                    <p className="text-2xl mb-4 font-bold">本日任務：10 個挑戰關卡</p>
+                    <div className="flex justify-center gap-4 text-lg text-cyan-50">
+                        <span>🔍 搜尋技巧</span>
+                        <span>📚 工具書使用</span>
+                        <span>📊 圖表判讀</span>
+                        <span>💧 萊恩的故事</span>
+                    </div>
+                </div>
+                <button onClick={onStart} className="bg-yellow-400 text-blue-900 px-16 py-6 rounded-full text-4xl font-black shadow-2xl hover:bg-yellow-300 transition transform hover:scale-105 active:scale-95">
+                    開始冒險
+                </button>
+            </div>
+        );
+
+        // 1. 關鍵字搜尋 (教師控場版)
+        const Task1_Search = () => {
+            const [revealLevel, setRevealLevel] = useState(0); // 0: None, 1: Ryan, 2: Exclude, 3: Complete
+            const [feedback, setFeedback] = useState(null); // 'correct', 'wrong'
+
+            const handleCorrect = () => {
+                setFeedback('correct');
+                if (revealLevel < 3) {
+                    setTimeout(() => {
+                        setRevealLevel(prev => prev + 1);
+                        setFeedback(null);
+                    }, 1000);
+                }
+            };
+
+            const handleWrong = () => {
+                setFeedback('wrong');
+                setTimeout(() => setFeedback(null), 1500);
+            };
+
+            return (
+                <div className="h-screen bg-blue-50 flex flex-col items-center pt-16 px-8 slide-enter relative">
+                    <LotteryWidget />
+                    <h2 className="text-4xl font-bold text-blue-800 mb-4">關卡 1：關鍵字獵人 (教師控場)</h2>
+                    <p className="text-2xl text-slate-600 mb-10">情境：想找「水井」資料但不想看到恐怖片「貞子」，請同學回答正確關鍵字！</p>
+
+                    {/* 搜尋框顯示區 */}
+                    <div className="w-full max-w-4xl bg-white rounded-full shadow-2xl flex items-center p-6 mb-12 border-4 border-blue-200 min-h-[120px]">
+                        <Icons.Search className="text-slate-400 ml-4 mr-6" size={48} />
+                        <div className="flex-1 flex gap-4 overflow-x-auto text-4xl font-bold text-slate-700 items-center">
+                            {revealLevel >= 1 && <span className="bg-green-100 text-green-800 px-6 py-3 rounded-2xl border-2 border-green-300 animate-bounce">"萊恩"</span>}
+                            {revealLevel >= 2 && <span className="bg-blue-100 text-blue-800 px-6 py-3 rounded-2xl border-2 border-blue-300 animate-bounce">水井 -電影</span>}
+                            {revealLevel === 0 && <span className="text-slate-300 italic text-3xl">等待輸入中...</span>}
+                        </div>
+                    </div>
+
+                    {/* 教師控制區 */}
+                    <div className="flex gap-12 justify-center items-center">
+                        <button 
+                            onClick={handleCorrect}
+                            disabled={revealLevel >= 3}
+                            className="w-40 h-40 bg-white rounded-full border-8 border-green-500 text-green-500 shadow-xl hover:bg-green-50 active:scale-95 transition flex flex-col items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <Icons.Check size={80} strokeWidth={4} />
+                            <span className="font-black text-xl mt-2">答對 (O)</span>
+                        </button>
+
+                        <button 
+                            onClick={handleWrong}
+                            className="w-40 h-40 bg-white rounded-full border-8 border-red-500 text-red-500 shadow-xl hover:bg-red-50 active:scale-95 transition flex flex-col items-center justify-center group"
+                        >
+                            <Icons.X size={80} strokeWidth={4} />
+                            <span className="font-black text-xl mt-2">答錯 (X)</span>
+                        </button>
+                    </div>
+
+                    {/* 回饋動畫 */}
+                    {feedback === 'correct' && (
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-green-500 animate-ping opacity-75 pointer-events-none">
+                            <Icons.Check size={300} />
+                        </div>
+                    )}
+                    {feedback === 'wrong' && (
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-red-500 animate-ping opacity-75 pointer-events-none">
+                            <Icons.X size={300} />
+                        </div>
+                    )}
+                    {revealLevel === 3 && (
+                        <div className="mt-8 text-4xl font-bold text-green-600 animate-bounce">
+                            🎉 完美搜尋指令！
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // 2. 字典查找 (Sorting)
+        const Task2_Dict = () => {
+            const correctOrder = ["確定部首", "計算部首筆畫", "翻檢索頁碼", "計算剩餘筆畫", "查到字義"];
+            const [items, setItems] = useState([...correctOrder].sort(() => Math.random() - 0.5));
+            
+            const moveItem = (idx, dir) => {
+                const newItems = [...items];
+                const swapIdx = idx + dir;
+                if(swapIdx >= 0 && swapIdx < items.length) {
+                    [newItems[idx], newItems[swapIdx]] = [newItems[swapIdx], newItems[idx]];
+                    setItems(newItems);
+                }
+            };
+
+            const isSuccess = JSON.stringify(items) === JSON.stringify(correctOrder);
+
+            return (
+                <div className="h-screen bg-orange-50 flex flex-col items-center pt-16 px-8 slide-enter relative">
+                    <LotteryWidget />
+                    <h2 className="text-4xl font-bold text-orange-800 mb-4">關卡 2：字典小偵探</h2>
+                    <p className="text-2xl text-slate-600 mb-8">請依照「部首索引法」的正確順序，將步驟由上往下排列！</p>
+                    <div className="flex flex-col gap-4 w-full max-w-2xl">
+                        {items.map((item, idx) => (
+                            <div key={item} className={`flex items-center justify-between p-4 rounded-xl text-2xl font-bold shadow-md border-2 ${isSuccess ? 'bg-green-100 border-green-500 text-green-800' : 'bg-white border-orange-200 text-slate-700'}`}>
+                                <span className="bg-orange-200 w-10 h-10 rounded-full flex items-center justify-center text-orange-800 mr-4">{idx+1}</span>
+                                {item}
+                                <div className="flex gap-2">
+                                    <button onClick={()=>moveItem(idx, -1)} className="p-2 bg-slate-100 rounded hover:bg-slate-200">⬆️</button>
+                                    <button onClick={()=>moveItem(idx, 1)} className="p-2 bg-slate-100 rounded hover:bg-slate-200">⬇️</button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    {isSuccess && <div className="mt-6 text-4xl font-bold text-green-600 animate-bounce">🎉 排序正確！</div>}
+                </div>
+            );
+        };
+
+        // 3. 資訊判讀 (True/False)
+        const Task3_Info = () => {
+            const [answer, setAnswer] = useState(null);
+            return (
+                <div className="h-screen bg-purple-50 flex flex-col items-center pt-16 px-8 slide-enter relative">
+                    <LotteryWidget />
+                    <h2 className="text-4xl font-bold text-purple-800 mb-4">關卡 3：謠言粉碎機</h2>
+                    <p className="text-2xl text-slate-600 mb-10">題目：網路上看到「喝鹽水可以治療近視」的文章，應該直接轉傳給朋友嗎？</p>
+                    
+                    <div className="flex gap-12 w-full max-w-4xl h-64">
+                        <button onClick={()=>setAnswer(true)} className={`flex-1 rounded-3xl text-5xl font-bold border-4 transition ${answer===true ? 'bg-red-600 text-white border-red-800' : 'bg-white text-red-500 border-red-200 hover:bg-red-50'}`}>
+                            ⭕ 可以
+                        </button>
+                        <button onClick={()=>setAnswer(false)} className={`flex-1 rounded-3xl text-5xl font-bold border-4 transition ${answer===false ? 'bg-green-600 text-white border-green-800' : 'bg-white text-green-500 border-green-200 hover:bg-green-50'}`}>
+                            ❌ 不行
+                        </button>
+                    </div>
+                    
+                    {answer === false && (
+                        <div className="mt-8 p-6 bg-green-100 rounded-xl border-2 border-green-500 text-green-800 text-2xl font-bold max-w-3xl">
+                            <p>正確！網路資訊需查證，尤其是醫療偏方。</p>
+                            <p>建議查詢「衛福部」或「查核中心」確認。</p>
+                        </div>
+                    )}
+                    {answer === true && (
+                        <div className="mt-8 p-6 bg-red-100 rounded-xl border-2 border-red-500 text-red-800 text-2xl font-bold">
+                            危險！未經查證的資訊可能害人害己喔！
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // 4. 5W1H (Multiple Choice)
+        const Task4_5W1H = () => {
+            const [selected, setSelected] = useState(null);
+            return (
+                <div className="h-screen bg-cyan-50 flex flex-col items-center pt-16 px-8 slide-enter relative">
+                    <LotteryWidget />
+                    <h2 className="text-4xl font-bold text-cyan-800 mb-4">關卡 4：5W1H 偵探</h2>
+                    <p className="text-2xl text-slate-600 mb-8">關於《行動的水滴》這篇文章，下列哪個 5W1H 分析是<span className="text-red-500">錯誤</span>的？</p>
+                    <div className="grid grid-cols-2 gap-6 w-full max-w-5xl">
+                        {[
+                            {id:1, t:"Who：主角是萊恩"}, 
+                            {id:2, t:"Where：故事發生在加拿大與非洲"}, 
+                            {id:3, t:"Why：為了賺錢買玩具"}, 
+                            {id:4, t:"What：目標是鑿一口井"}
+                        ].map(opt => (
+                            <button key={opt.id} onClick={()=>setSelected(opt.id)} className={`p-8 rounded-2xl text-3xl font-bold text-left border-4 transition ${selected === opt.id ? (opt.id===3 ? 'bg-green-100 border-green-500 text-green-800' : 'bg-red-100 border-red-500 text-red-800') : 'bg-white border-cyan-200 text-slate-700 hover:border-cyan-400'}`}>
+                                {opt.t}
+                            </button>
+                        ))}
+                    </div>
+                    {selected === 3 && <div className="mt-8 text-3xl font-bold text-green-600 animate-bounce">答對了！動機是為了「救人」不是買玩具！</div>}
+                </div>
+            );
+        };
+
+        // 5. 故事排序 (Timeline)
+        const Task5_Timeline = () => {
+            const correct = ["聽老師說故事", "做家事存錢", "捐款給基金會", "去烏干達看水井"];
+            const [seq, setSeq] = useState(["捐款給基金會", "聽老師說故事", "去烏干達看水井", "做家事存錢"]);
+            
+            const swap = (i, j) => {
+                if(j<0 || j>=seq.length) return;
+                const newSeq = [...seq];
+                [newSeq[i], newSeq[j]] = [newSeq[j], newSeq[i]];
+                setSeq(newSeq);
+            };
+            const isDone = JSON.stringify(seq) === JSON.stringify(correct);
+
+            return (
+                <div className="h-screen bg-indigo-50 flex flex-col items-center pt-16 px-8 slide-enter relative">
+                    <LotteryWidget />
+                    <h2 className="text-4xl font-bold text-indigo-800 mb-4">關卡 5：時光回溯器</h2>
+                    <p className="text-2xl text-slate-600 mb-8">請依時間先後，重組萊恩的故事！</p>
+                    <div className="flex gap-4 items-center">
+                        {seq.map((item, i) => (
+                            <div key={i} className="flex flex-col items-center">
+                                <div className={`w-48 h-48 flex items-center justify-center p-4 text-center text-2xl font-bold rounded-2xl border-4 shadow-lg ${isDone ? 'bg-green-100 border-green-500 text-green-800' : 'bg-white border-indigo-200 text-indigo-900'}`}>
+                                    {item}
+                                </div>
+                                {!isDone && (
+                                    <div className="flex gap-2 mt-2">
+                                        <button onClick={()=>swap(i, i-1)} className="p-2 bg-white rounded shadow">⬅️</button>
+                                        <button onClick={()=>swap(i, i+1)} className="p-2 bg-white rounded shadow">➡️</button>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                    {isDone && <div className="mt-10 text-4xl font-bold text-green-600">👏 故事重組成功！</div>}
+                </div>
+            );
+        };
+
+        // 6. DFC 分類 (Matching)
+        const Task6_DFC = () => {
+            const [matches, setMatches] = useState({});
+            const [current, setCurrent] = useState(null);
+            
+            const options = [
+                {id: 'feel', label: '感受', text: '覺得震驚難過'},
+                {id: 'imagine', label: '想像', text: '決定靠自己賺錢'},
+                {id: 'do', label: '實踐', text: '幫鄰居擦窗戶'},
+                {id: 'share', label: '分享', text: '演講影響他人'}
+            ];
+
+            const handleMatch = (stepId) => {
+                if(current) {
+                    if(current.id === stepId) {
+                        setMatches({...matches, [stepId]: true});
+                        setCurrent(null);
+                    } else {
+                        alert('不對喔，再試試看！');
+                        setCurrent(null);
+                    }
+                }
+            };
+
+            return (
+                <div className="h-screen bg-pink-50 flex flex-col items-center pt-16 px-8 slide-enter relative">
+                    <LotteryWidget />
+                    <h2 className="text-4xl font-bold text-pink-800 mb-4">關卡 6：DFC 行動解碼</h2>
+                    <p className="text-2xl text-slate-600 mb-8">請點選下方的具體行動，再點選上方對應的步驟！</p>
+                    
+                    {/* Targets */}
+                    <div className="flex gap-6 mb-12">
+                        {options.map(o => (
+                            <div key={o.id} onClick={()=>handleMatch(o.id)} className={`w-48 h-32 rounded-xl border-4 border-dashed flex items-center justify-center text-3xl font-bold cursor-pointer transition ${matches[o.id] ? 'bg-pink-200 border-pink-500 text-pink-800' : 'bg-white/50 border-pink-300 text-slate-400 hover:bg-white'}`}>
+                                {matches[o.id] ? o.text : o.label}
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Sources */}
+                    <div className="flex gap-6 flex-wrap justify-center">
+                        {options.map(o => !matches[o.id] && (
+                            <button key={o.id} onClick={()=>setCurrent(o)} className={`px-8 py-6 bg-white rounded-xl shadow-lg text-2xl font-bold border-2 border-slate-200 hover:border-pink-500 hover:text-pink-600 ${current?.id===o.id ? 'ring-4 ring-pink-300' : ''}`}>
+                                {o.text}
+                            </button>
+                        ))}
+                    </div>
+                    
+                    {Object.keys(matches).length === 4 && <div className="mt-8 text-4xl font-bold text-pink-600 animate-pulse">全數解碼完成！</div>}
+                </div>
+            );
+        };
+
+        // 7. 圖表分析 (Visual)
+        const Task7_Chart = () => {
+            const [ans, setAns] = useState(null);
+            return (
+                <div className="h-screen bg-slate-50 flex flex-col items-center pt-16 px-8 slide-enter relative">
+                    <LotteryWidget />
+                    <h2 className="text-4xl font-bold text-slate-800 mb-4">關卡 7：圖表數據眼</h2>
+                    <p className="text-xl text-slate-600 mb-6">根據《語文常識二》的近視盛行率圖表概念，請問：</p>
+                    
+                    <div className="flex gap-12 items-center w-full max-w-5xl">
+                        <div className="w-1/2 bg-white p-6 rounded-xl shadow-xl border">
+                            <h3 className="text-xl font-bold mb-4 text-center">各年級近視比率 (示意圖)</h3>
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2"><span className="w-12">小一</span><div className="h-6 bg-blue-300 w-[20%]"></div> 20%</div>
+                                <div className="flex items-center gap-2"><span className="w-12">小六</span><div className="h-6 bg-blue-500 w-[65%]"></div> 65%</div>
+                                <div className="flex items-center gap-2"><span className="w-12">國三</span><div className="h-6 bg-blue-700 w-[89%]"></div> 89%</div>
+                            </div>
+                        </div>
+                        <div className="w-1/2 space-y-4">
+                            <p className="text-2xl font-bold mb-4">Q：從圖表中可以發現什麼趨勢？</p>
+                            <button onClick={()=>setAns(false)} className={`w-full p-4 text-xl font-bold rounded-lg border-2 text-left ${ans===false ? 'bg-red-100 border-red-500' : 'bg-white'}`}>A. 年紀越小，近視越嚴重</button>
+                            <button onClick={()=>setAns(true)} className={`w-full p-4 text-xl font-bold rounded-lg border-2 text-left ${ans===true ? 'bg-green-100 border-green-500' : 'bg-white'}`}>B. 隨著年級增加，近視率大幅上升</button>
+                            <button onClick={()=>setAns(false)} className={`w-full p-4 text-xl font-bold rounded-lg border-2 text-left ${ans===false ? 'bg-red-100 border-red-500' : 'bg-white'}`}>C. 國三學生視力最好</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // 8. 成語應用 (Idiom)
+        const Task8_Idiom = () => {
+            const [sel, setSel] = useState(null);
+            return (
+                <div className="h-screen bg-emerald-50 flex flex-col items-center pt-16 px-8 slide-enter relative">
+                    <LotteryWidget />
+                    <h2 className="text-4xl font-bold text-emerald-800 mb-4">關卡 8：成語智慧王</h2>
+                    <p className="text-2xl text-slate-600 mb-8">萊恩雖然只是個孩子，但他「一塊錢一塊錢」慢慢存，最後完成了大夢想。這最適合用哪句成語形容？</p>
+                    <div className="grid grid-cols-2 gap-6 max-w-4xl w-full">
+                        {[
+                            {t:"功虧一簣", r:"錯了，這是指差一點失敗"}, 
+                            {t:"聚沙成塔", r:"正確！比喻積少成多"}, 
+                            {t:"好高騖遠", r:"不對，這是指不切實際"}, 
+                            {t:"紙上談兵", r:"錯，萊恩有實際行動"}
+                        ].map((o, i) => (
+                            <button key={i} onClick={()=>setSel(i)} className={`p-8 rounded-2xl text-4xl font-black shadow-md transition ${sel===i ? (o.t==='聚沙成塔'?'bg-green-500 text-white':'bg-red-500 text-white') : 'bg-white text-emerald-900 hover:bg-emerald-100'}`}>
+                                {o.t}
+                            </button>
+                        ))}
+                    </div>
+                    {sel !== null && (
+                        <div className="mt-8 text-3xl font-bold bg-white px-8 py-4 rounded-xl shadow">
+                            {[
+                                {t:"功虧一簣", r:"❌ 錯了，這是指「只差最後一步卻失敗」。"}, 
+                                {t:"聚沙成塔", r:"⭕ 正確！比喻積少成多，就像萊恩存錢一樣！"}, 
+                                {t:"好高騖遠", r:"❌ 不對，這是指「目標過高而不切實際」。"}, 
+                                {t:"紙上談兵", r:"❌ 錯，萊恩有實際行動，不只是空談。"}
+                            ][sel].r}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // 9. 小組活動
+        const Task9_Group = () => {
+            const [time, setTime] = useState(180);
+            const [active, setActive] = useState(false);
+            const [topicIndex, setTopicIndex] = useState(null);
+            const [isSpinning, setIsSpinning] = useState(false);
+
+            const topics = [
+                { t: "學校廁所太髒亂，如何改善？", h: "提示：感受(髒亂原因) → 想像(解決方案) → 實踐(打掃排程/標語) → 分享(宣導)" },
+                { t: "同學不愛回收，垃圾桶爆滿怎麼辦？", h: "提示：觀察誰在亂丟？設計有趣的回收桶？舉辦回收比賽？" },
+                { t: "校園角落黑黑的，大家不敢去，如何改造？", h: "提示：可以彩繪嗎？可以種花嗎？如何讓它變亮？" },
+                { t: "如果我們班要發起義賣，要賣什麼？", h: "提示：什麼東西大家會買？成本低？有意義？" },
+                { t: "如何幫助轉學生快速融入班級？", h: "提示：他需要什麼？(朋友/嚮導) 我們可以做什麼？(一起吃飯/玩)" },
+                { t: "午餐常常剩很多，很浪費，怎麼辦？", h: "提示：為什麼會剩？(不好吃/太多) 可以減少份量或改變菜單嗎？" }
+            ];
+
+            useEffect(()=>{
+                let i;
+                if(active && time>0) i=setInterval(()=>setTime(t=>t-1),1000);
+                return ()=>clearInterval(i);
+            },[active, time]);
+
+            const adjustTime = (seconds) => {
+                setTime(prev => Math.max(0, prev + seconds));
+            };
+
+            const spinTopic = () => {
+                if(isSpinning) return;
+                setIsSpinning(true);
+                let count = 0;
+                const maxCount = 15;
+                const interval = setInterval(() => {
+                    setTopicIndex(Math.floor(Math.random() * topics.length));
+                    count++;
+                    if (count >= maxCount) {
+                        clearInterval(interval);
+                        setIsSpinning(false);
+                    }
+                }, 100);
+            };
+
+            return (
+                <div className="h-screen bg-yellow-50 flex flex-col items-center pt-10 px-8 slide-enter">
+                    <h2 className="text-4xl font-bold text-yellow-800 mb-4">關卡 9：小組行動策劃</h2>
+                    <p className="text-2xl text-slate-600 mb-6">請各組運用 DFC 四步驟，針對抽到的題目進行討論！</p>
+                    
+                    <div className="flex w-full max-w-6xl gap-8 h-[500px]">
+                        <div className="w-1/2 bg-white rounded-3xl shadow-xl border-4 border-yellow-200 p-8 flex flex-col items-center justify-between">
+                            <h3 className="text-3xl font-black text-slate-700">今日挑戰題目</h3>
+                            <div className="flex-1 w-full flex flex-col justify-center items-center text-center">
+                                {topicIndex !== null ? (
+                                    <div className="animate-fade-in">
+                                        <p className="text-3xl font-bold text-blue-900 mb-6 leading-relaxed">{topics[topicIndex].t}</p>
+                                        <div className="bg-yellow-100 p-4 rounded-xl text-yellow-800 text-xl font-medium border-l-4 border-yellow-500 text-left">
+                                            💡 {topics[topicIndex].h}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-slate-400 text-2xl">請點擊下方按鈕抽取...</p>
+                                )}
+                            </div>
+                            <button onClick={spinTopic} disabled={isSpinning} className="bg-yellow-400 text-yellow-900 px-10 py-4 rounded-full text-2xl font-black shadow-lg hover:bg-yellow-300 active:scale-95 transition flex items-center gap-3">
+                                <Icons.RefreshCcw className={isSpinning ? 'animate-spin' : ''} /> 抽取題目
+                            </button>
+                        </div>
+
+                        <div className="w-1/2 bg-slate-800 rounded-3xl shadow-xl border-4 border-slate-600 p-8 flex flex-col items-center text-white relative">
+                            <h3 className="text-3xl font-bold mb-2">討論倒數</h3>
+                            <div className="flex-1 flex items-center justify-center w-full relative">
+                                <div className={`text-9xl font-mono font-black tracking-widest ${time < 30 ? 'text-red-500 animate-pulse' : 'text-white'}`}>
+                                    {Math.floor(time/60)}:{(time%60).toString().padStart(2,'0')}
+                                </div>
+                                <div className="absolute -right-4 flex flex-col gap-4">
+                                    <button onClick={()=>adjustTime(60)} className="bg-slate-600 p-3 rounded-full hover:bg-slate-500 active:scale-95" title="+1分鐘"><Icons.Plus/></button>
+                                    <button onClick={()=>adjustTime(-60)} className="bg-slate-600 p-3 rounded-full hover:bg-slate-500 active:scale-95" title="-1分鐘"><Icons.Minus/></button>
+                                </div>
+                            </div>
+                            <div className="flex gap-6 w-full px-8">
+                                <button onClick={()=>setActive(!active)} className={`flex-1 py-4 rounded-2xl text-3xl font-black shadow-lg transition active:translate-y-1 ${active ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}>
+                                    {active ? '暫停' : '開始計時'}
+                                </button>
+                                <button onClick={()=>{setActive(false); setTime(180);}} className="w-1/3 bg-gray-600 py-4 rounded-2xl text-2xl font-bold shadow-lg hover:bg-gray-500 active:translate-y-1">
+                                    重置
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // 10. 終極測驗 (Quiz)
+        const Task10_Quiz = () => {
+            const qs = [
+                {q:"萊恩想挖井是為了什麼？", ops:["賺錢","救人","寫作業"], a:1},
+                {q:"「水井」在網路上搜尋時，若不想看到鬼片，應輸入？", ops:["水井 -電影","水井 +鬼片","水井 貞子"], a:0},
+                {q:"下列哪張圖適合呈現「全班視力不良率的變化」？", ops:["圓餅圖","折線圖","長條圖"], a:1},
+                {q:"萊恩的筆友吉米來自哪個國家？", ops:["美國","烏干達","加拿大"], a:1},
+                {q:"「聚沙成塔」的意思是？", ops:["蓋沙堡","積少成多","浪費時間"], a:1},
+            ];
+            const [idx, setIdx] = useState(0);
+            const [score, setScore] = useState(0);
+            const [showScore, setShowScore] = useState(false);
+
+            const ans = (i) => {
+                if(i === qs[idx].a) setScore(s=>s+20);
+                if(idx < qs.length-1) setIdx(i=>i+1);
+                else setShowScore(true);
+            };
+
+            return (
+                <div className="h-screen bg-blue-900 flex flex-col items-center pt-16 px-8 slide-enter text-white">
+                    <h2 className="text-4xl font-bold text-yellow-400 mb-8">關卡 10：終極大考驗</h2>
+                    
+                    {!showScore ? (
+                        <div className="bg-white/10 backdrop-blur-md p-10 rounded-3xl border border-white/20 max-w-4xl w-full text-center">
+                            <div className="text-2xl text-blue-200 mb-6">第 {idx+1} / 5 題</div>
+                            <h3 className="text-4xl font-bold mb-12 leading-relaxed">{qs[idx].q}</h3>
+                            <div className="grid gap-6">
+                                {qs[idx].ops.map((o, i) => (
+                                    <button key={i} onClick={()=>ans(i)} className="bg-white text-blue-900 text-2xl font-bold py-4 rounded-xl hover:bg-yellow-400 transition">
+                                        {o}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-center animate-bounce">
+                            <Icons.Award size={120} className="mx-auto text-yellow-400 mb-6"/>
+                            <div className="text-6xl font-black mb-4">測驗結束！</div>
+                            <div className="text-4xl">得分：<span className="text-yellow-400 text-6xl">{score}</span> / 100</div>
+                            <button onClick={()=>{setIdx(0);setScore(0);setShowScore(false)}} className="mt-12 bg-blue-600 px-8 py-3 rounded-full text-xl hover:bg-blue-500">再玩一次</button>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // 11. 結語
+        const EndSlide = () => (
+            <div className="h-screen bg-slate-900 flex flex-col items-center justify-center p-8 text-center text-white slide-enter">
+                <h2 className="text-5xl font-black mb-12 text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-yellow-500">
+                    結語：雞蛋與高牆
+                </h2>
+                <div className="bg-white/10 p-10 rounded-2xl border border-white/20 shadow-2xl mb-12 max-w-4xl">
+                    <p className="text-3xl font-serif italic mb-8">「在高牆和撞向高牆的蛋之間，<br/>我永遠站在蛋這一邊！」</p>
+                    <div className="flex justify-center gap-12 text-xl font-bold mt-8">
+                        <div className="text-gray-400">🧱 高牆 = 強勢環境</div>
+                        <div className="text-yellow-200">🥚 雞蛋 = 脆弱生命 (希望)</div>
+                    </div>
+                </div>
+                <p className="text-2xl text-blue-200 font-bold">只要有行動，脆弱的蛋也能孵化希望，飛越缺水的高牆！</p>
+            </div>
+        );
+
+        const App = () => {
+            const [page, setPage] = useState(0);
+            const pages = [
+                <CoverSlide onStart={()=>setPage(1)}/>,
+                <Task1_Search/>,
+                <Task2_Dict/>,
+                <Task3_Info/>,
+                <Task4_5W1H/>,
+                <Task5_Timeline/>,
+                <Task6_DFC/>,
+                <Task7_Chart/>,
+                <Task8_Idiom/>,
+                <Task9_Group/>,
+                <Task10_Quiz/>,
+                <EndSlide/>
+            ];
+
+            return (
+                <div>
+                    {pages[page]}
+                    {page > 0 && <Navbar current={page} total={pages.length} prev={()=>setPage(p=>p-1)} next={()=>setPage(p=>p+1)} />}
+                </div>
+            );
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
