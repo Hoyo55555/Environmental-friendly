@@ -3,14 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>閱讀偵探團：行動的水滴 (教師控場版)</title>
+    <title>閱讀偵探團：行動的水滴 (教師控場版 v2)</title>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; user-select: none; }
+        body { 
+            font-family: 'Noto Sans TC', sans-serif; 
+            user-select: none; 
+            background-color: #f1f5f9;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* 防止捲動 */
+        }
         .slide-enter { animation: slideIn 0.5s ease-out; }
         @keyframes slideIn {
             from { opacity: 0; transform: translateY(20px); }
@@ -27,8 +34,8 @@
         }
     </style>
 </head>
-<body class="bg-slate-100 overflow-hidden">
-    <div id="root"></div>
+<body class="w-screen h-screen">
+    <div id="root" class="w-full h-full"></div>
 
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
@@ -55,20 +62,25 @@
             Target: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
             BarChart: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>,
             PieChart: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>,
-            Timer: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Timer: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+            // 新增箭頭樣式
+            ChevronUp: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M18 15l-6-6-6 6"/></svg>,
+            ChevronDown: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M6 9l6 6 6-6"/></svg>,
+            ChevronLeft: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M15 19l-7-7 7-7"/></svg>,
+            ChevronRight: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M9 5l7 7-7 7"/></svg>
         };
 
         // --- 全局導航 ---
         const Navbar = ({ current, total, next, prev }) => (
-            <div className="fixed bottom-0 w-full bg-white border-t border-gray-200 p-4 flex justify-between items-center shadow-lg z-50">
-                <button onClick={prev} disabled={current === 0} className={`flex items-center gap-2 px-6 py-3 rounded-full text-xl font-bold transition ${current === 0 ? 'bg-gray-200 text-gray-400' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}>
-                    <Icons.ArrowLeft /> 上一關
+            <div className="fixed bottom-0 w-full bg-white/90 backdrop-blur border-t border-gray-200 p-4 flex justify-between items-center shadow-lg z-50 h-24">
+                <button onClick={prev} disabled={current === 0} className={`flex items-center gap-3 px-8 py-4 rounded-full text-2xl font-bold transition ${current === 0 ? 'bg-gray-200 text-gray-400' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}>
+                    <Icons.ArrowLeft size={28} /> 上一關
                 </button>
-                <div className="text-2xl font-black text-blue-600">
+                <div className="text-3xl font-black text-blue-600 tracking-widest">
                     關卡：{current} / {total - 2}
                 </div>
-                <button onClick={next} disabled={current === total - 1} className={`flex items-center gap-2 px-6 py-3 rounded-full text-xl font-bold transition ${current === total - 1 ? 'bg-gray-200 text-gray-400' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg btn-active'}`}>
-                    下一關 <Icons.ArrowRight />
+                <button onClick={next} disabled={current === total - 1} className={`flex items-center gap-3 px-8 py-4 rounded-full text-2xl font-bold transition ${current === total - 1 ? 'bg-gray-200 text-gray-400' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg btn-active'}`}>
+                    下一關 <Icons.ArrowRight size={28} />
                 </button>
             </div>
         );
@@ -76,7 +88,7 @@
         // --- 抽籤組件 (懸浮按鈕) ---
         const LotteryWidget = () => {
             const [isOpen, setIsOpen] = useState(false);
-            const [stage, setStage] = useState('idle'); // idle, rollingRow, resultRow, rollingSeat, resultSeat
+            const [stage, setStage] = useState('idle'); 
             const [row, setRow] = useState(1);
             const [seat, setSeat] = useState(1);
 
@@ -85,7 +97,7 @@
                 else setStage('rollingSeat');
                 
                 let count = 0;
-                const maxCount = 20; // 滾動次數
+                const maxCount = 20;
                 const interval = setInterval(() => {
                     const num = Math.floor(Math.random() * 6) + 1;
                     if (type === 'row') setRow(num);
@@ -108,58 +120,54 @@
 
             return (
                 <>
-                    {/* 懸浮按鈕 */}
                     <button 
                         onClick={() => setIsOpen(true)}
-                        className="fixed top-4 right-4 z-50 bg-pink-500 text-white p-4 rounded-full shadow-xl hover:bg-pink-600 hover:scale-110 transition transform border-4 border-white"
+                        className="fixed top-6 right-6 z-50 bg-pink-500 text-white p-5 rounded-full shadow-xl hover:bg-pink-600 hover:scale-110 transition transform border-4 border-white"
                         title="隨機抽籤"
                     >
-                        <Icons.Dice size={32} />
+                        <Icons.Dice size={40} />
                     </button>
 
-                    {/* 抽籤 Modal */}
                     {isOpen && (
                         <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center backdrop-blur-sm">
-                            <div className="bg-white rounded-3xl p-8 w-[500px] shadow-2xl text-center relative border-4 border-pink-200 animate-bounce-in">
-                                <button onClick={() => setIsOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-                                    <Icons.XCircle size={32} />
+                            <div className="bg-white rounded-[2rem] p-10 w-[600px] shadow-2xl text-center relative border-8 border-pink-100 animate-bounce-in">
+                                <button onClick={() => setIsOpen(false)} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600">
+                                    <Icons.XCircle size={40} />
                                 </button>
                                 
-                                <h3 className="text-3xl font-black text-pink-600 mb-8 flex justify-center items-center gap-2">
-                                    <Icons.Dice /> 幸運抽籤機
+                                <h3 className="text-4xl font-black text-pink-600 mb-10 flex justify-center items-center gap-3">
+                                    <Icons.Dice size={48}/> 幸運抽籤機
                                 </h3>
 
-                                <div className="flex gap-6 justify-center mb-10">
-                                    {/* Row Box */}
-                                    <div className={`w-40 h-48 rounded-2xl border-4 flex flex-col items-center justify-center ${stage === 'rollingRow' ? 'border-pink-400 bg-pink-50' : (stage !== 'idle' ? 'border-pink-600 bg-pink-100' : 'border-slate-200 bg-slate-50')}`}>
-                                        <span className="text-slate-500 font-bold text-lg mb-2">第幾排</span>
-                                        <span className={`text-7xl font-black ${stage === 'rollingRow' ? 'text-pink-400 blur-sm' : 'text-pink-600'}`}>
+                                <div className="flex gap-8 justify-center mb-12">
+                                    <div className={`w-48 h-56 rounded-3xl border-4 flex flex-col items-center justify-center ${stage === 'rollingRow' ? 'border-pink-400 bg-pink-50' : (stage !== 'idle' ? 'border-pink-600 bg-pink-100' : 'border-slate-200 bg-slate-50')}`}>
+                                        <span className="text-slate-500 font-bold text-2xl mb-4">第幾排</span>
+                                        <span className={`text-8xl font-black ${stage === 'rollingRow' ? 'text-pink-400 blur-sm' : 'text-pink-600'}`}>
                                             {row}
                                         </span>
                                     </div>
 
-                                    {/* Seat Box */}
-                                    <div className={`w-40 h-48 rounded-2xl border-4 flex flex-col items-center justify-center ${stage === 'rollingSeat' ? 'border-blue-400 bg-blue-50' : (stage === 'resultSeat' ? 'border-blue-600 bg-blue-100' : 'border-slate-200 bg-slate-50')}`}>
-                                        <span className="text-slate-500 font-bold text-lg mb-2">第幾號</span>
-                                        <span className={`text-7xl font-black ${stage === 'rollingSeat' ? 'text-blue-400 blur-sm' : 'text-blue-600'}`}>
+                                    <div className={`w-48 h-56 rounded-3xl border-4 flex flex-col items-center justify-center ${stage === 'rollingSeat' ? 'border-blue-400 bg-blue-50' : (stage === 'resultSeat' ? 'border-blue-600 bg-blue-100' : 'border-slate-200 bg-slate-50')}`}>
+                                        <span className="text-slate-500 font-bold text-2xl mb-4">第幾號</span>
+                                        <span className={`text-8xl font-black ${stage === 'rollingSeat' ? 'text-blue-400 blur-sm' : 'text-blue-600'}`}>
                                             {seat === '?' ? '?' : seat}
                                         </span>
                                     </div>
                                 </div>
 
-                                <div className="flex justify-center gap-4">
+                                <div className="flex justify-center gap-6">
                                     {stage === 'idle' && (
-                                        <button onClick={() => startRoll('row')} className="bg-pink-500 text-white px-8 py-3 rounded-full text-2xl font-bold hover:bg-pink-600 shadow-lg w-full">
+                                        <button onClick={() => startRoll('row')} className="bg-pink-500 text-white px-10 py-4 rounded-full text-3xl font-bold hover:bg-pink-600 shadow-lg w-full transform hover:scale-105 transition">
                                             抽排數！
                                         </button>
                                     )}
                                     {stage === 'resultRow' && (
-                                        <button onClick={() => startRoll('seat')} className="bg-blue-500 text-white px-8 py-3 rounded-full text-2xl font-bold hover:bg-blue-600 shadow-lg w-full">
+                                        <button onClick={() => startRoll('seat')} className="bg-blue-500 text-white px-10 py-4 rounded-full text-3xl font-bold hover:bg-blue-600 shadow-lg w-full transform hover:scale-105 transition">
                                             抽座號！
                                         </button>
                                     )}
                                     {stage === 'resultSeat' && (
-                                        <button onClick={reset} className="bg-slate-500 text-white px-8 py-3 rounded-full text-2xl font-bold hover:bg-slate-600 shadow-lg w-full">
+                                        <button onClick={reset} className="bg-slate-500 text-white px-10 py-4 rounded-full text-3xl font-bold hover:bg-slate-600 shadow-lg w-full transform hover:scale-105 transition">
                                             再抽一次
                                         </button>
                                     )}
@@ -175,22 +183,22 @@
 
         // 0. 封面
         const CoverSlide = ({ onStart }) => (
-            <div className="h-screen flex flex-col items-center justify-center bg-gradient-to-br from-cyan-500 to-blue-600 text-white p-8 slide-enter">
-                <div className="bg-white/20 p-10 rounded-full mb-8 backdrop-blur-sm animate-pulse">
-                    <Icons.Search size={100} color="white" />
+            <div className="h-full flex flex-col items-center justify-center bg-gradient-to-br from-cyan-500 to-blue-600 text-white p-8 slide-enter">
+                <div className="bg-white/20 p-12 rounded-full mb-10 backdrop-blur-sm animate-pulse">
+                    <Icons.Search size={120} color="white" />
                 </div>
-                <h1 className="text-7xl font-black mb-6 tracking-wider drop-shadow-lg">閱讀偵探團</h1>
-                <h2 className="text-4xl font-bold mb-12 text-cyan-100">任務：解鎖行動密碼</h2>
-                <div className="bg-white/10 rounded-2xl p-8 backdrop-blur-md mb-12 max-w-3xl text-center border border-white/30">
-                    <p className="text-2xl mb-4 font-bold">本日任務：10 個挑戰關卡</p>
-                    <div className="flex justify-center gap-4 text-lg text-cyan-50">
-                        <span>🔍 搜尋技巧</span>
-                        <span>📚 工具書使用</span>
-                        <span>📊 圖表判讀</span>
-                        <span>💧 萊恩的故事</span>
+                <h1 className="text-8xl font-black mb-8 tracking-wider drop-shadow-lg">閱讀偵探團</h1>
+                <h2 className="text-5xl font-bold mb-16 text-cyan-100">任務：解鎖行動密碼</h2>
+                <div className="bg-white/10 rounded-3xl p-10 backdrop-blur-md mb-16 max-w-4xl text-center border border-white/30">
+                    <p className="text-3xl mb-6 font-bold">本日任務：10 個挑戰關卡</p>
+                    <div className="flex justify-center gap-8 text-2xl text-cyan-50 font-bold">
+                        <span className="flex items-center gap-2"><Icons.Search size={28}/> 搜尋技巧</span>
+                        <span className="flex items-center gap-2"><Icons.Book size={28}/> 工具書使用</span>
+                        <span className="flex items-center gap-2"><Icons.Chart size={28}/> 圖表判讀</span>
+                        <span className="flex items-center gap-2"><Icons.Users size={28}/> 萊恩的故事</span>
                     </div>
                 </div>
-                <button onClick={onStart} className="bg-yellow-400 text-blue-900 px-16 py-6 rounded-full text-4xl font-black shadow-2xl hover:bg-yellow-300 transition transform hover:scale-105 active:scale-95">
+                <button onClick={onStart} className="bg-yellow-400 text-blue-900 px-20 py-8 rounded-full text-5xl font-black shadow-2xl hover:bg-yellow-300 transition transform hover:scale-105 active:scale-95">
                     開始冒險
                 </button>
             </div>
@@ -217,62 +225,57 @@
             };
 
             return (
-                <div className="h-screen bg-blue-50 flex flex-col items-center pt-16 px-8 slide-enter relative">
+                <div className="h-full bg-blue-50 flex flex-col items-center pt-24 px-8 slide-enter relative">
                     <LotteryWidget />
-                    <h2 className="text-4xl font-bold text-blue-800 mb-4">關卡 1：關鍵字獵人 (教師控場)</h2>
-                    <p className="text-2xl text-slate-600 mb-10">情境：想找「水井」資料但不想看到恐怖片「貞子」，請同學回答正確關鍵字！</p>
+                    <h2 className="text-5xl font-bold text-blue-800 mb-6">關卡 1：關鍵字獵人 (教師控場)</h2>
+                    <p className="text-3xl text-slate-600 mb-16 text-center max-w-5xl leading-relaxed">情境：想找「水井」資料但不想看到恐怖片「貞子」，<br/>請同學回答正確關鍵字！</p>
 
                     {/* 搜尋框顯示區 */}
-                    <div className="w-full max-w-4xl bg-white rounded-full shadow-2xl flex items-center p-6 mb-12 border-4 border-blue-200 min-h-[120px]">
-                        <Icons.Search className="text-slate-400 ml-4 mr-6" size={48} />
-                        <div className="flex-1 flex gap-4 overflow-x-auto text-4xl font-bold text-slate-700 items-center">
-                            {revealLevel >= 1 && <span className="bg-green-100 text-green-800 px-6 py-3 rounded-2xl border-2 border-green-300 animate-bounce">"萊恩"</span>}
-                            {revealLevel >= 2 && <span className="bg-blue-100 text-blue-800 px-6 py-3 rounded-2xl border-2 border-blue-300 animate-bounce">水井 -電影</span>}
-                            {revealLevel === 0 && <span className="text-slate-300 italic text-3xl">等待輸入中...</span>}
+                    <div className="w-full max-w-5xl bg-white rounded-full shadow-2xl flex items-center p-8 mb-16 border-8 border-blue-200 min-h-[160px]">
+                        <Icons.Search className="text-slate-400 ml-6 mr-8" size={64} />
+                        <div className="flex-1 flex gap-6 overflow-x-auto text-5xl font-bold text-slate-700 items-center">
+                            {revealLevel >= 1 && <span className="bg-green-100 text-green-800 px-8 py-4 rounded-3xl border-4 border-green-300 animate-bounce">"萊恩"</span>}
+                            {revealLevel >= 2 && <span className="bg-blue-100 text-blue-800 px-8 py-4 rounded-3xl border-4 border-blue-300 animate-bounce">水井 -電影</span>}
+                            {revealLevel === 0 && <span className="text-slate-300 italic text-4xl tracking-widest">等待輸入中...</span>}
                         </div>
                     </div>
 
                     {/* 教師控制區 */}
-                    <div className="flex gap-12 justify-center items-center">
+                    <div className="flex gap-20 justify-center items-center mt-8">
                         <button 
                             onClick={handleCorrect}
                             disabled={revealLevel >= 3}
-                            className="w-40 h-40 bg-white rounded-full border-8 border-green-500 text-green-500 shadow-xl hover:bg-green-50 active:scale-95 transition flex flex-col items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-48 h-48 bg-white rounded-full border-[10px] border-green-500 text-green-500 shadow-xl hover:bg-green-50 active:scale-95 transition flex flex-col items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <Icons.Check size={80} strokeWidth={4} />
-                            <span className="font-black text-xl mt-2">答對 (O)</span>
+                            <Icons.Check size={100} strokeWidth={5} />
+                            <span className="font-black text-3xl mt-2">答對 (O)</span>
                         </button>
 
                         <button 
                             onClick={handleWrong}
-                            className="w-40 h-40 bg-white rounded-full border-8 border-red-500 text-red-500 shadow-xl hover:bg-red-50 active:scale-95 transition flex flex-col items-center justify-center group"
+                            className="w-48 h-48 bg-white rounded-full border-[10px] border-red-500 text-red-500 shadow-xl hover:bg-red-50 active:scale-95 transition flex flex-col items-center justify-center group"
                         >
-                            <Icons.X size={80} strokeWidth={4} />
-                            <span className="font-black text-xl mt-2">答錯 (X)</span>
+                            <Icons.X size={100} strokeWidth={5} />
+                            <span className="font-black text-3xl mt-2">答錯 (X)</span>
                         </button>
                     </div>
 
                     {/* 回饋動畫 */}
                     {feedback === 'correct' && (
                         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-green-500 animate-ping opacity-75 pointer-events-none">
-                            <Icons.Check size={300} />
+                            <Icons.Check size={400} />
                         </div>
                     )}
                     {feedback === 'wrong' && (
                         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-red-500 animate-ping opacity-75 pointer-events-none">
-                            <Icons.X size={300} />
-                        </div>
-                    )}
-                    {revealLevel === 3 && (
-                        <div className="mt-8 text-4xl font-bold text-green-600 animate-bounce">
-                            🎉 完美搜尋指令！
+                            <Icons.X size={400} />
                         </div>
                     )}
                 </div>
             );
         };
 
-        // 2. 字典查找 (Sorting)
+        // 2. 字典查找 (Sorting) - 優化箭頭按鈕
         const Task2_Dict = () => {
             const correctOrder = ["確定部首", "計算部首筆畫", "翻檢索頁碼", "計算剩餘筆畫", "查到字義"];
             const [items, setItems] = useState([...correctOrder].sort(() => Math.random() - 0.5));
@@ -289,23 +292,29 @@
             const isSuccess = JSON.stringify(items) === JSON.stringify(correctOrder);
 
             return (
-                <div className="h-screen bg-orange-50 flex flex-col items-center pt-16 px-8 slide-enter relative">
+                <div className="h-full bg-orange-50 flex flex-col items-center pt-24 px-8 slide-enter relative">
                     <LotteryWidget />
-                    <h2 className="text-4xl font-bold text-orange-800 mb-4">關卡 2：字典小偵探</h2>
-                    <p className="text-2xl text-slate-600 mb-8">請依照「部首索引法」的正確順序，將步驟由上往下排列！</p>
-                    <div className="flex flex-col gap-4 w-full max-w-2xl">
+                    <h2 className="text-5xl font-bold text-orange-800 mb-6">關卡 2：字典小偵探</h2>
+                    <p className="text-3xl text-slate-600 mb-12">請依照「部首索引法」的正確順序，將步驟由上往下排列！</p>
+                    <div className="flex flex-col gap-6 w-full max-w-3xl">
                         {items.map((item, idx) => (
-                            <div key={item} className={`flex items-center justify-between p-4 rounded-xl text-2xl font-bold shadow-md border-2 ${isSuccess ? 'bg-green-100 border-green-500 text-green-800' : 'bg-white border-orange-200 text-slate-700'}`}>
-                                <span className="bg-orange-200 w-10 h-10 rounded-full flex items-center justify-center text-orange-800 mr-4">{idx+1}</span>
-                                {item}
-                                <div className="flex gap-2">
-                                    <button onClick={()=>moveItem(idx, -1)} className="p-2 bg-slate-100 rounded hover:bg-slate-200">⬆️</button>
-                                    <button onClick={()=>moveItem(idx, 1)} className="p-2 bg-slate-100 rounded hover:bg-slate-200">⬇️</button>
+                            <div key={item} className={`flex items-center justify-between p-6 rounded-2xl text-3xl font-bold shadow-lg border-4 transition-all duration-300 ${isSuccess ? 'bg-green-100 border-green-500 text-green-800 scale-105' : 'bg-white border-orange-200 text-slate-700'}`}>
+                                <div className="flex items-center">
+                                    <span className="bg-orange-200 w-14 h-14 rounded-full flex items-center justify-center text-orange-900 mr-6 text-2xl">{idx+1}</span>
+                                    {item}
+                                </div>
+                                <div className="flex gap-4">
+                                    <button onClick={()=>moveItem(idx, -1)} disabled={idx === 0} className="p-4 bg-blue-500 text-white rounded-full shadow-md hover:bg-blue-600 hover:scale-110 transition disabled:opacity-30 disabled:cursor-not-allowed">
+                                        <Icons.ChevronUp size={32} />
+                                    </button>
+                                    <button onClick={()=>moveItem(idx, 1)} disabled={idx === items.length - 1} className="p-4 bg-blue-500 text-white rounded-full shadow-md hover:bg-blue-600 hover:scale-110 transition disabled:opacity-30 disabled:cursor-not-allowed">
+                                        <Icons.ChevronDown size={32} />
+                                    </button>
                                 </div>
                             </div>
                         ))}
                     </div>
-                    {isSuccess && <div className="mt-6 text-4xl font-bold text-green-600 animate-bounce">🎉 排序正確！</div>}
+                    {isSuccess && <div className="mt-10 text-5xl font-bold text-green-600 animate-bounce">🎉 排序正確！太厲害了！</div>}
                 </div>
             );
         };
@@ -314,29 +323,29 @@
         const Task3_Info = () => {
             const [answer, setAnswer] = useState(null);
             return (
-                <div className="h-screen bg-purple-50 flex flex-col items-center pt-16 px-8 slide-enter relative">
+                <div className="h-full bg-purple-50 flex flex-col items-center pt-24 px-8 slide-enter relative">
                     <LotteryWidget />
-                    <h2 className="text-4xl font-bold text-purple-800 mb-4">關卡 3：謠言粉碎機</h2>
-                    <p className="text-2xl text-slate-600 mb-10">題目：網路上看到「喝鹽水可以治療近視」的文章，應該直接轉傳給朋友嗎？</p>
+                    <h2 className="text-5xl font-bold text-purple-800 mb-6">關卡 3：謠言粉碎機</h2>
+                    <p className="text-3xl text-slate-600 mb-16">題目：網路上看到「喝鹽水可以治療近視」的文章，<br/>應該直接轉傳給朋友嗎？</p>
                     
-                    <div className="flex gap-12 w-full max-w-4xl h-64">
-                        <button onClick={()=>setAnswer(true)} className={`flex-1 rounded-3xl text-5xl font-bold border-4 transition ${answer===true ? 'bg-red-600 text-white border-red-800' : 'bg-white text-red-500 border-red-200 hover:bg-red-50'}`}>
+                    <div className="flex gap-16 w-full max-w-5xl h-80">
+                        <button onClick={()=>setAnswer(true)} className={`flex-1 rounded-[3rem] text-6xl font-black border-8 transition transform hover:scale-105 active:scale-95 ${answer===true ? 'bg-red-600 text-white border-red-800' : 'bg-white text-red-500 border-red-200 hover:bg-red-50'}`}>
                             ⭕ 可以
                         </button>
-                        <button onClick={()=>setAnswer(false)} className={`flex-1 rounded-3xl text-5xl font-bold border-4 transition ${answer===false ? 'bg-green-600 text-white border-green-800' : 'bg-white text-green-500 border-green-200 hover:bg-green-50'}`}>
+                        <button onClick={()=>setAnswer(false)} className={`flex-1 rounded-[3rem] text-6xl font-black border-8 transition transform hover:scale-105 active:scale-95 ${answer===false ? 'bg-green-600 text-white border-green-800' : 'bg-white text-green-500 border-green-200 hover:bg-green-50'}`}>
                             ❌ 不行
                         </button>
                     </div>
                     
                     {answer === false && (
-                        <div className="mt-8 p-6 bg-green-100 rounded-xl border-2 border-green-500 text-green-800 text-2xl font-bold max-w-3xl">
-                            <p>正確！網路資訊需查證，尤其是醫療偏方。</p>
-                            <p>建議查詢「衛福部」或「查核中心」確認。</p>
+                        <div className="mt-12 p-8 bg-green-100 rounded-3xl border-4 border-green-500 text-green-800 text-3xl font-bold max-w-4xl shadow-xl animate-fade-in">
+                            <p className="mb-2">✅ 正確！網路資訊需查證，尤其是醫療偏方。</p>
+                            <p>💡 建議查詢「衛福部」或「查核中心」確認。</p>
                         </div>
                     )}
                     {answer === true && (
-                        <div className="mt-8 p-6 bg-red-100 rounded-xl border-2 border-red-500 text-red-800 text-2xl font-bold">
-                            危險！未經查證的資訊可能害人害己喔！
+                        <div className="mt-12 p-8 bg-red-100 rounded-3xl border-4 border-red-500 text-red-800 text-3xl font-bold shadow-xl animate-shake">
+                            ⚠️ 危險！未經查證的資訊可能害人害己喔！
                         </div>
                     )}
                 </div>
@@ -347,28 +356,28 @@
         const Task4_5W1H = () => {
             const [selected, setSelected] = useState(null);
             return (
-                <div className="h-screen bg-cyan-50 flex flex-col items-center pt-16 px-8 slide-enter relative">
+                <div className="h-full bg-cyan-50 flex flex-col items-center pt-24 px-8 slide-enter relative">
                     <LotteryWidget />
-                    <h2 className="text-4xl font-bold text-cyan-800 mb-4">關卡 4：5W1H 偵探</h2>
-                    <p className="text-2xl text-slate-600 mb-8">關於《行動的水滴》這篇文章，下列哪個 5W1H 分析是<span className="text-red-500">錯誤</span>的？</p>
-                    <div className="grid grid-cols-2 gap-6 w-full max-w-5xl">
+                    <h2 className="text-5xl font-bold text-cyan-800 mb-6">關卡 4：5W1H 偵探</h2>
+                    <p className="text-3xl text-slate-600 mb-12">關於《行動的水滴》這篇文章，下列哪個 5W1H 分析是<span className="text-red-500 font-black">錯誤</span>的？</p>
+                    <div className="grid grid-cols-2 gap-8 w-full max-w-6xl">
                         {[
                             {id:1, t:"Who：主角是萊恩"}, 
-                            {id:2, t:"Where：故事發生在加拿大與非洲"}, 
+                            {id:2, t:"Where：故事在加拿大與非洲"}, 
                             {id:3, t:"Why：為了賺錢買玩具"}, 
                             {id:4, t:"What：目標是鑿一口井"}
                         ].map(opt => (
-                            <button key={opt.id} onClick={()=>setSelected(opt.id)} className={`p-8 rounded-2xl text-3xl font-bold text-left border-4 transition ${selected === opt.id ? (opt.id===3 ? 'bg-green-100 border-green-500 text-green-800' : 'bg-red-100 border-red-500 text-red-800') : 'bg-white border-cyan-200 text-slate-700 hover:border-cyan-400'}`}>
+                            <button key={opt.id} onClick={()=>setSelected(opt.id)} className={`p-10 rounded-3xl text-4xl font-bold text-left border-[6px] transition transform hover:scale-105 ${selected === opt.id ? (opt.id===3 ? 'bg-green-100 border-green-500 text-green-800' : 'bg-red-100 border-red-500 text-red-800') : 'bg-white border-cyan-200 text-slate-700 hover:border-cyan-400'}`}>
                                 {opt.t}
                             </button>
                         ))}
                     </div>
-                    {selected === 3 && <div className="mt-8 text-3xl font-bold text-green-600 animate-bounce">答對了！動機是為了「救人」不是買玩具！</div>}
+                    {selected === 3 && <div className="mt-12 text-4xl font-bold text-green-600 animate-bounce">✅ 答對了！動機是為了「救人」不是買玩具！</div>}
                 </div>
             );
         };
 
-        // 5. 故事排序 (Timeline)
+        // 5. 故事排序 (Timeline) - 優化箭頭按鈕
         const Task5_Timeline = () => {
             const correct = ["聽老師說故事", "做家事存錢", "捐款給基金會", "去烏干達看水井"];
             const [seq, setSeq] = useState(["捐款給基金會", "聽老師說故事", "去烏干達看水井", "做家事存錢"]);
@@ -382,26 +391,30 @@
             const isDone = JSON.stringify(seq) === JSON.stringify(correct);
 
             return (
-                <div className="h-screen bg-indigo-50 flex flex-col items-center pt-16 px-8 slide-enter relative">
+                <div className="h-full bg-indigo-50 flex flex-col items-center pt-24 px-8 slide-enter relative">
                     <LotteryWidget />
-                    <h2 className="text-4xl font-bold text-indigo-800 mb-4">關卡 5：時光回溯器</h2>
-                    <p className="text-2xl text-slate-600 mb-8">請依時間先後，重組萊恩的故事！</p>
-                    <div className="flex gap-4 items-center">
+                    <h2 className="text-5xl font-bold text-indigo-800 mb-6">關卡 5：時光回溯器</h2>
+                    <p className="text-3xl text-slate-600 mb-16">請依時間先後，重組萊恩的故事！</p>
+                    <div className="flex gap-8 items-center">
                         {seq.map((item, i) => (
                             <div key={i} className="flex flex-col items-center">
-                                <div className={`w-48 h-48 flex items-center justify-center p-4 text-center text-2xl font-bold rounded-2xl border-4 shadow-lg ${isDone ? 'bg-green-100 border-green-500 text-green-800' : 'bg-white border-indigo-200 text-indigo-900'}`}>
+                                <div className={`w-64 h-64 flex items-center justify-center p-6 text-center text-3xl font-bold rounded-[2rem] border-[6px] shadow-xl transition-all duration-500 ${isDone ? 'bg-green-100 border-green-500 text-green-800 scale-110' : 'bg-white border-indigo-200 text-indigo-900'}`}>
                                     {item}
                                 </div>
                                 {!isDone && (
-                                    <div className="flex gap-2 mt-2">
-                                        <button onClick={()=>swap(i, i-1)} className="p-2 bg-white rounded shadow">⬅️</button>
-                                        <button onClick={()=>swap(i, i+1)} className="p-2 bg-white rounded shadow">➡️</button>
+                                    <div className="flex gap-4 mt-6">
+                                        <button onClick={()=>swap(i, i-1)} disabled={i===0} className="p-4 bg-indigo-500 text-white rounded-full shadow-lg hover:bg-indigo-600 hover:scale-110 transition disabled:opacity-30 disabled:cursor-not-allowed">
+                                            <Icons.ChevronLeft size={36} />
+                                        </button>
+                                        <button onClick={()=>swap(i, i+1)} disabled={i===seq.length-1} className="p-4 bg-indigo-500 text-white rounded-full shadow-lg hover:bg-indigo-600 hover:scale-110 transition disabled:opacity-30 disabled:cursor-not-allowed">
+                                            <Icons.ChevronRight size={36} />
+                                        </button>
                                     </div>
                                 )}
                             </div>
                         ))}
                     </div>
-                    {isDone && <div className="mt-10 text-4xl font-bold text-green-600">👏 故事重組成功！</div>}
+                    {isDone && <div className="mt-16 text-5xl font-bold text-green-600 animate-bounce">👏 故事重組成功！</div>}
                 </div>
             );
         };
@@ -431,30 +444,30 @@
             };
 
             return (
-                <div className="h-screen bg-pink-50 flex flex-col items-center pt-16 px-8 slide-enter relative">
+                <div className="h-full bg-pink-50 flex flex-col items-center pt-24 px-8 slide-enter relative">
                     <LotteryWidget />
-                    <h2 className="text-4xl font-bold text-pink-800 mb-4">關卡 6：DFC 行動解碼</h2>
-                    <p className="text-2xl text-slate-600 mb-8">請點選下方的具體行動，再點選上方對應的步驟！</p>
+                    <h2 className="text-5xl font-bold text-pink-800 mb-6">關卡 6：DFC 行動解碼</h2>
+                    <p className="text-3xl text-slate-600 mb-12">請點選下方的具體行動，再點選上方對應的步驟！</p>
                     
                     {/* Targets */}
-                    <div className="flex gap-6 mb-12">
+                    <div className="flex gap-8 mb-16">
                         {options.map(o => (
-                            <div key={o.id} onClick={()=>handleMatch(o.id)} className={`w-48 h-32 rounded-xl border-4 border-dashed flex items-center justify-center text-3xl font-bold cursor-pointer transition ${matches[o.id] ? 'bg-pink-200 border-pink-500 text-pink-800' : 'bg-white/50 border-pink-300 text-slate-400 hover:bg-white'}`}>
+                            <div key={o.id} onClick={()=>handleMatch(o.id)} className={`w-64 h-40 rounded-3xl border-[6px] border-dashed flex items-center justify-center text-4xl font-bold cursor-pointer transition transform hover:scale-105 ${matches[o.id] ? 'bg-pink-200 border-pink-500 text-pink-800 border-solid' : 'bg-white/50 border-pink-300 text-slate-400 hover:bg-white hover:border-pink-400'}`}>
                                 {matches[o.id] ? o.text : o.label}
                             </div>
                         ))}
                     </div>
 
                     {/* Sources */}
-                    <div className="flex gap-6 flex-wrap justify-center">
+                    <div className="flex gap-8 flex-wrap justify-center">
                         {options.map(o => !matches[o.id] && (
-                            <button key={o.id} onClick={()=>setCurrent(o)} className={`px-8 py-6 bg-white rounded-xl shadow-lg text-2xl font-bold border-2 border-slate-200 hover:border-pink-500 hover:text-pink-600 ${current?.id===o.id ? 'ring-4 ring-pink-300' : ''}`}>
+                            <button key={o.id} onClick={()=>setCurrent(o)} className={`px-10 py-8 bg-white rounded-2xl shadow-xl text-3xl font-bold border-4 border-slate-200 hover:border-pink-500 hover:text-pink-600 hover:-translate-y-2 transition ${current?.id===o.id ? 'ring-8 ring-pink-300 border-pink-500' : ''}`}>
                                 {o.text}
                             </button>
                         ))}
                     </div>
                     
-                    {Object.keys(matches).length === 4 && <div className="mt-8 text-4xl font-bold text-pink-600 animate-pulse">全數解碼完成！</div>}
+                    {Object.keys(matches).length === 4 && <div className="mt-12 text-5xl font-bold text-pink-600 animate-pulse">✨ 全數解碼完成！</div>}
                 </div>
             );
         };
@@ -463,25 +476,25 @@
         const Task7_Chart = () => {
             const [ans, setAns] = useState(null);
             return (
-                <div className="h-screen bg-slate-50 flex flex-col items-center pt-16 px-8 slide-enter relative">
+                <div className="h-full bg-slate-50 flex flex-col items-center pt-24 px-8 slide-enter relative">
                     <LotteryWidget />
-                    <h2 className="text-4xl font-bold text-slate-800 mb-4">關卡 7：圖表數據眼</h2>
-                    <p className="text-xl text-slate-600 mb-6">根據《語文常識二》的近視盛行率圖表概念，請問：</p>
+                    <h2 className="text-5xl font-bold text-slate-800 mb-6">關卡 7：圖表數據眼</h2>
+                    <p className="text-3xl text-slate-600 mb-12">根據《語文常識二》的近視盛行率圖表概念，請問：</p>
                     
-                    <div className="flex gap-12 items-center w-full max-w-5xl">
-                        <div className="w-1/2 bg-white p-6 rounded-xl shadow-xl border">
-                            <h3 className="text-xl font-bold mb-4 text-center">各年級近視比率 (示意圖)</h3>
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-2"><span className="w-12">小一</span><div className="h-6 bg-blue-300 w-[20%]"></div> 20%</div>
-                                <div className="flex items-center gap-2"><span className="w-12">小六</span><div className="h-6 bg-blue-500 w-[65%]"></div> 65%</div>
-                                <div className="flex items-center gap-2"><span className="w-12">國三</span><div className="h-6 bg-blue-700 w-[89%]"></div> 89%</div>
+                    <div className="flex gap-16 items-center w-full max-w-6xl">
+                        <div className="w-1/2 bg-white p-10 rounded-3xl shadow-2xl border-4 border-slate-200">
+                            <h3 className="text-2xl font-bold mb-8 text-center text-slate-700">各年級近視比率 (示意圖)</h3>
+                            <div className="space-y-8 text-2xl font-bold text-slate-600">
+                                <div className="flex items-center gap-4"><span className="w-16">小一</span><div className="h-8 bg-blue-300 w-[20%] rounded-r-lg"></div> 20%</div>
+                                <div className="flex items-center gap-4"><span className="w-16">小六</span><div className="h-8 bg-blue-500 w-[65%] rounded-r-lg"></div> 65%</div>
+                                <div className="flex items-center gap-4"><span className="w-16">國三</span><div className="h-8 bg-blue-700 w-[89%] rounded-r-lg"></div> 89%</div>
                             </div>
                         </div>
-                        <div className="w-1/2 space-y-4">
-                            <p className="text-2xl font-bold mb-4">Q：從圖表中可以發現什麼趨勢？</p>
-                            <button onClick={()=>setAns(false)} className={`w-full p-4 text-xl font-bold rounded-lg border-2 text-left ${ans===false ? 'bg-red-100 border-red-500' : 'bg-white'}`}>A. 年紀越小，近視越嚴重</button>
-                            <button onClick={()=>setAns(true)} className={`w-full p-4 text-xl font-bold rounded-lg border-2 text-left ${ans===true ? 'bg-green-100 border-green-500' : 'bg-white'}`}>B. 隨著年級增加，近視率大幅上升</button>
-                            <button onClick={()=>setAns(false)} className={`w-full p-4 text-xl font-bold rounded-lg border-2 text-left ${ans===false ? 'bg-red-100 border-red-500' : 'bg-white'}`}>C. 國三學生視力最好</button>
+                        <div className="w-1/2 space-y-6">
+                            <p className="text-3xl font-bold mb-6 text-blue-900">Q：從圖表中可以發現什麼趨勢？</p>
+                            <button onClick={()=>setAns(false)} className={`w-full p-6 text-2xl font-bold rounded-2xl border-4 text-left transition hover:scale-105 ${ans===false ? 'bg-red-100 border-red-500' : 'bg-white hover:border-slate-400'}`}>A. 年紀越小，近視越嚴重</button>
+                            <button onClick={()=>setAns(true)} className={`w-full p-6 text-2xl font-bold rounded-2xl border-4 text-left transition hover:scale-105 ${ans===true ? 'bg-green-100 border-green-500' : 'bg-white hover:border-slate-400'}`}>B. 隨著年級增加，近視率大幅上升</button>
+                            <button onClick={()=>setAns(false)} className={`w-full p-6 text-2xl font-bold rounded-2xl border-4 text-left transition hover:scale-105 ${ans===false ? 'bg-red-100 border-red-500' : 'bg-white hover:border-slate-400'}`}>C. 國三學生視力最好</button>
                         </div>
                     </div>
                 </div>
@@ -492,24 +505,24 @@
         const Task8_Idiom = () => {
             const [sel, setSel] = useState(null);
             return (
-                <div className="h-screen bg-emerald-50 flex flex-col items-center pt-16 px-8 slide-enter relative">
+                <div className="h-full bg-emerald-50 flex flex-col items-center pt-24 px-8 slide-enter relative">
                     <LotteryWidget />
-                    <h2 className="text-4xl font-bold text-emerald-800 mb-4">關卡 8：成語智慧王</h2>
-                    <p className="text-2xl text-slate-600 mb-8">萊恩雖然只是個孩子，但他「一塊錢一塊錢」慢慢存，最後完成了大夢想。這最適合用哪句成語形容？</p>
-                    <div className="grid grid-cols-2 gap-6 max-w-4xl w-full">
+                    <h2 className="text-5xl font-bold text-emerald-800 mb-6">關卡 8：成語智慧王</h2>
+                    <p className="text-3xl text-slate-600 mb-12 text-center">萊恩雖然只是個孩子，但他「一塊錢一塊錢」慢慢存，<br/>最後完成了大夢想。這最適合用哪句成語形容？</p>
+                    <div className="grid grid-cols-2 gap-8 max-w-5xl w-full">
                         {[
                             {t:"功虧一簣", r:"錯了，這是指差一點失敗"}, 
                             {t:"聚沙成塔", r:"正確！比喻積少成多"}, 
                             {t:"好高騖遠", r:"不對，這是指不切實際"}, 
                             {t:"紙上談兵", r:"錯，萊恩有實際行動"}
                         ].map((o, i) => (
-                            <button key={i} onClick={()=>setSel(i)} className={`p-8 rounded-2xl text-4xl font-black shadow-md transition ${sel===i ? (o.t==='聚沙成塔'?'bg-green-500 text-white':'bg-red-500 text-white') : 'bg-white text-emerald-900 hover:bg-emerald-100'}`}>
+                            <button key={i} onClick={()=>setSel(i)} className={`p-10 rounded-[2rem] text-5xl font-black shadow-lg transition transform hover:scale-105 border-4 ${sel===i ? (o.t==='聚沙成塔'?'bg-green-500 text-white border-green-600':'bg-red-500 text-white border-red-600') : 'bg-white text-emerald-900 hover:bg-emerald-100 border-emerald-100'}`}>
                                 {o.t}
                             </button>
                         ))}
                     </div>
                     {sel !== null && (
-                        <div className="mt-8 text-3xl font-bold bg-white px-8 py-4 rounded-xl shadow">
+                        <div className="mt-12 text-4xl font-bold bg-white px-12 py-6 rounded-3xl shadow-xl animate-bounce border-4 border-emerald-200">
                             {[
                                 {t:"功虧一簣", r:"❌ 錯了，這是指「只差最後一步卻失敗」。"}, 
                                 {t:"聚沙成塔", r:"⭕ 正確！比喻積少成多，就像萊恩存錢一樣！"}, 
@@ -564,46 +577,46 @@
             };
 
             return (
-                <div className="h-screen bg-yellow-50 flex flex-col items-center pt-10 px-8 slide-enter">
-                    <h2 className="text-4xl font-bold text-yellow-800 mb-4">關卡 9：小組行動策劃</h2>
-                    <p className="text-2xl text-slate-600 mb-6">請各組運用 DFC 四步驟，針對抽到的題目進行討論！</p>
+                <div className="h-full bg-yellow-50 flex flex-col items-center pt-16 px-8 slide-enter">
+                    <h2 className="text-5xl font-bold text-yellow-800 mb-6">關卡 9：小組行動策劃</h2>
+                    <p className="text-3xl text-slate-600 mb-12">請各組運用 DFC 四步驟，針對抽到的題目進行討論！</p>
                     
-                    <div className="flex w-full max-w-6xl gap-8 h-[500px]">
-                        <div className="w-1/2 bg-white rounded-3xl shadow-xl border-4 border-yellow-200 p-8 flex flex-col items-center justify-between">
-                            <h3 className="text-3xl font-black text-slate-700">今日挑戰題目</h3>
+                    <div className="flex w-full max-w-7xl gap-12 h-[600px]">
+                        <div className="w-1/2 bg-white rounded-[3rem] shadow-2xl border-8 border-yellow-200 p-10 flex flex-col items-center justify-between">
+                            <h3 className="text-4xl font-black text-slate-700">今日挑戰題目</h3>
                             <div className="flex-1 w-full flex flex-col justify-center items-center text-center">
                                 {topicIndex !== null ? (
-                                    <div className="animate-fade-in">
-                                        <p className="text-3xl font-bold text-blue-900 mb-6 leading-relaxed">{topics[topicIndex].t}</p>
-                                        <div className="bg-yellow-100 p-4 rounded-xl text-yellow-800 text-xl font-medium border-l-4 border-yellow-500 text-left">
+                                    <div className="animate-fade-in w-full">
+                                        <p className="text-4xl font-bold text-blue-900 mb-8 leading-normal">{topics[topicIndex].t}</p>
+                                        <div className="bg-yellow-100 p-6 rounded-2xl text-yellow-900 text-2xl font-medium border-l-8 border-yellow-500 text-left">
                                             💡 {topics[topicIndex].h}
                                         </div>
                                     </div>
                                 ) : (
-                                    <p className="text-slate-400 text-2xl">請點擊下方按鈕抽取...</p>
+                                    <p className="text-slate-300 text-4xl font-bold">請點擊下方按鈕抽取...</p>
                                 )}
                             </div>
-                            <button onClick={spinTopic} disabled={isSpinning} className="bg-yellow-400 text-yellow-900 px-10 py-4 rounded-full text-2xl font-black shadow-lg hover:bg-yellow-300 active:scale-95 transition flex items-center gap-3">
-                                <Icons.RefreshCcw className={isSpinning ? 'animate-spin' : ''} /> 抽取題目
+                            <button onClick={spinTopic} disabled={isSpinning} className="bg-yellow-400 text-yellow-900 px-12 py-5 rounded-full text-3xl font-black shadow-lg hover:bg-yellow-300 active:scale-95 transition flex items-center gap-3 transform hover:scale-105">
+                                <Icons.RefreshCcw className={isSpinning ? 'animate-spin' : ''} size={32} /> 抽取題目
                             </button>
                         </div>
 
-                        <div className="w-1/2 bg-slate-800 rounded-3xl shadow-xl border-4 border-slate-600 p-8 flex flex-col items-center text-white relative">
-                            <h3 className="text-3xl font-bold mb-2">討論倒數</h3>
+                        <div className="w-1/2 bg-slate-800 rounded-[3rem] shadow-2xl border-8 border-slate-600 p-10 flex flex-col items-center text-white relative">
+                            <h3 className="text-4xl font-bold mb-4">討論倒數</h3>
                             <div className="flex-1 flex items-center justify-center w-full relative">
-                                <div className={`text-9xl font-mono font-black tracking-widest ${time < 30 ? 'text-red-500 animate-pulse' : 'text-white'}`}>
+                                <div className={`text-[10rem] font-mono font-black tracking-widest ${time < 30 ? 'text-red-500 animate-pulse' : 'text-white'}`}>
                                     {Math.floor(time/60)}:{(time%60).toString().padStart(2,'0')}
                                 </div>
-                                <div className="absolute -right-4 flex flex-col gap-4">
-                                    <button onClick={()=>adjustTime(60)} className="bg-slate-600 p-3 rounded-full hover:bg-slate-500 active:scale-95" title="+1分鐘"><Icons.Plus/></button>
-                                    <button onClick={()=>adjustTime(-60)} className="bg-slate-600 p-3 rounded-full hover:bg-slate-500 active:scale-95" title="-1分鐘"><Icons.Minus/></button>
+                                <div className="absolute -right-4 flex flex-col gap-6">
+                                    <button onClick={()=>adjustTime(60)} className="bg-slate-600 p-4 rounded-full hover:bg-slate-500 active:scale-95 shadow-lg" title="+1分鐘"><Icons.Plus size={32}/></button>
+                                    <button onClick={()=>adjustTime(-60)} className="bg-slate-600 p-4 rounded-full hover:bg-slate-500 active:scale-95 shadow-lg" title="-1分鐘"><Icons.Minus size={32}/></button>
                                 </div>
                             </div>
-                            <div className="flex gap-6 w-full px-8">
-                                <button onClick={()=>setActive(!active)} className={`flex-1 py-4 rounded-2xl text-3xl font-black shadow-lg transition active:translate-y-1 ${active ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}>
+                            <div className="flex gap-8 w-full px-4">
+                                <button onClick={()=>setActive(!active)} className={`flex-1 py-5 rounded-3xl text-4xl font-black shadow-lg transition active:translate-y-1 hover:scale-105 ${active ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}>
                                     {active ? '暫停' : '開始計時'}
                                 </button>
-                                <button onClick={()=>{setActive(false); setTime(180);}} className="w-1/3 bg-gray-600 py-4 rounded-2xl text-2xl font-bold shadow-lg hover:bg-gray-500 active:translate-y-1">
+                                <button onClick={()=>{setActive(false); setTime(180);}} className="w-1/3 bg-gray-600 py-5 rounded-3xl text-3xl font-bold shadow-lg hover:bg-gray-500 active:translate-y-1 hover:scale-105">
                                     重置
                                 </button>
                             </div>
@@ -633,16 +646,16 @@
             };
 
             return (
-                <div className="h-screen bg-blue-900 flex flex-col items-center pt-16 px-8 slide-enter text-white">
-                    <h2 className="text-4xl font-bold text-yellow-400 mb-8">關卡 10：終極大考驗</h2>
+                <div className="h-full bg-blue-900 flex flex-col items-center pt-24 px-8 slide-enter text-white">
+                    <h2 className="text-5xl font-bold text-yellow-400 mb-12">關卡 10：終極大考驗</h2>
                     
                     {!showScore ? (
-                        <div className="bg-white/10 backdrop-blur-md p-10 rounded-3xl border border-white/20 max-w-4xl w-full text-center">
-                            <div className="text-2xl text-blue-200 mb-6">第 {idx+1} / 5 題</div>
-                            <h3 className="text-4xl font-bold mb-12 leading-relaxed">{qs[idx].q}</h3>
-                            <div className="grid gap-6">
+                        <div className="bg-white/10 backdrop-blur-md p-12 rounded-[3rem] border border-white/20 max-w-5xl w-full text-center shadow-2xl">
+                            <div className="text-3xl text-blue-200 mb-8 font-bold">第 {idx+1} / 5 題</div>
+                            <h3 className="text-5xl font-bold mb-16 leading-relaxed">{qs[idx].q}</h3>
+                            <div className="grid gap-8">
                                 {qs[idx].ops.map((o, i) => (
-                                    <button key={i} onClick={()=>ans(i)} className="bg-white text-blue-900 text-2xl font-bold py-4 rounded-xl hover:bg-yellow-400 transition">
+                                    <button key={i} onClick={()=>ans(i)} className="bg-white text-blue-900 text-4xl font-bold py-6 rounded-2xl hover:bg-yellow-400 hover:scale-105 transition shadow-lg">
                                         {o}
                                     </button>
                                 ))}
@@ -650,10 +663,10 @@
                         </div>
                     ) : (
                         <div className="text-center animate-bounce">
-                            <Icons.Award size={120} className="mx-auto text-yellow-400 mb-6"/>
-                            <div className="text-6xl font-black mb-4">測驗結束！</div>
-                            <div className="text-4xl">得分：<span className="text-yellow-400 text-6xl">{score}</span> / 100</div>
-                            <button onClick={()=>{setIdx(0);setScore(0);setShowScore(false)}} className="mt-12 bg-blue-600 px-8 py-3 rounded-full text-xl hover:bg-blue-500">再玩一次</button>
+                            <Icons.Award size={150} className="mx-auto text-yellow-400 mb-8"/>
+                            <div className="text-7xl font-black mb-6">測驗結束！</div>
+                            <div className="text-5xl">得分：<span className="text-yellow-400 text-8xl font-black">{score}</span> / 100</div>
+                            <button onClick={()=>{setIdx(0);setScore(0);setShowScore(false)}} className="mt-16 bg-blue-600 px-12 py-5 rounded-full text-3xl font-bold hover:bg-blue-500 shadow-xl hover:scale-105 transition">再玩一次</button>
                         </div>
                     )}
                 </div>
@@ -662,18 +675,18 @@
 
         // 11. 結語
         const EndSlide = () => (
-            <div className="h-screen bg-slate-900 flex flex-col items-center justify-center p-8 text-center text-white slide-enter">
-                <h2 className="text-5xl font-black mb-12 text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-yellow-500">
+            <div className="h-full bg-slate-900 flex flex-col items-center justify-center p-8 text-center text-white slide-enter">
+                <h2 className="text-7xl font-black mb-16 text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-yellow-500">
                     結語：雞蛋與高牆
                 </h2>
-                <div className="bg-white/10 p-10 rounded-2xl border border-white/20 shadow-2xl mb-12 max-w-4xl">
-                    <p className="text-3xl font-serif italic mb-8">「在高牆和撞向高牆的蛋之間，<br/>我永遠站在蛋這一邊！」</p>
-                    <div className="flex justify-center gap-12 text-xl font-bold mt-8">
-                        <div className="text-gray-400">🧱 高牆 = 強勢環境</div>
-                        <div className="text-yellow-200">🥚 雞蛋 = 脆弱生命 (希望)</div>
+                <div className="bg-white/10 p-16 rounded-[3rem] border border-white/20 shadow-2xl mb-16 max-w-5xl backdrop-blur-md">
+                    <p className="text-5xl font-serif italic mb-12 leading-normal">「在高牆和撞向高牆的蛋之間，<br/>我永遠站在蛋這一邊！」</p>
+                    <div className="flex justify-center gap-16 text-3xl font-bold mt-8">
+                        <div className="text-gray-400 flex items-center gap-4">🧱 高牆 = 強勢環境</div>
+                        <div className="text-yellow-200 flex items-center gap-4">🥚 雞蛋 = 脆弱生命 (希望)</div>
                     </div>
                 </div>
-                <p className="text-2xl text-blue-200 font-bold">只要有行動，脆弱的蛋也能孵化希望，飛越缺水的高牆！</p>
+                <p className="text-4xl text-blue-200 font-bold">只要有行動，脆弱的蛋也能孵化希望，飛越缺水的高牆！</p>
             </div>
         );
 
@@ -695,7 +708,7 @@
             ];
 
             return (
-                <div>
+                <div className="w-full h-full">
                     {pages[page]}
                     {page > 0 && <Navbar current={page} total={pages.length} prev={()=>setPage(p=>p-1)} next={()=>setPage(p=>p+1)} />}
                 </div>
