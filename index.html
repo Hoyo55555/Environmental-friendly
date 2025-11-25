@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>閱讀偵探團：行動的水滴</title>
+    <title>閱讀偵探團：行動的水滴 (教師控場版 v5)</title>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -206,8 +206,8 @@
 
         // 1. 關鍵字搜尋 (教師控場版)
         const Task1_Search = () => {
-            const [revealLevel, setRevealLevel] = useState(0); // 0: None, 1: Ryan, 2: Exclude, 3: Complete
-            const [feedback, setFeedback] = useState(null); // 'correct', 'wrong'
+            const [revealLevel, setRevealLevel] = useState(0);
+            const [feedback, setFeedback] = useState(null);
 
             const handleCorrect = () => {
                 setFeedback('correct');
@@ -230,7 +230,6 @@
                     <h2 className="text-5xl font-bold text-blue-800 mb-6">關卡 1：關鍵字獵人 (教師控場)</h2>
                     <p className="text-3xl text-slate-600 mb-16 text-center max-w-5xl leading-relaxed">情境：想找「水井」資料但不想看到恐怖片「貞子」，<br/>請同學回答正確關鍵字！</p>
 
-                    {/* 搜尋框顯示區 */}
                     <div className="w-full max-w-5xl bg-white rounded-full shadow-2xl flex items-center p-8 mb-16 border-8 border-blue-200 min-h-[160px]">
                         <Icons.Search className="text-slate-400 ml-6 mr-8" size={64} />
                         <div className="flex-1 flex gap-6 overflow-x-auto text-5xl font-bold text-slate-700 items-center">
@@ -240,81 +239,68 @@
                         </div>
                     </div>
 
-                    {/* 教師控制區 */}
                     <div className="flex gap-20 justify-center items-center mt-8">
-                        <button 
-                            onClick={handleCorrect}
-                            disabled={revealLevel >= 3}
-                            className="w-48 h-48 bg-white rounded-full border-[10px] border-green-500 text-green-500 shadow-xl hover:bg-green-50 active:scale-95 transition flex flex-col items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
+                        <button onClick={handleCorrect} disabled={revealLevel >= 3} className="w-48 h-48 bg-white rounded-full border-[10px] border-green-500 text-green-500 shadow-xl hover:bg-green-50 active:scale-95 transition flex flex-col items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed">
                             <Icons.Check size={100} strokeWidth={5} />
                             <span className="font-black text-3xl mt-2">答對 (O)</span>
                         </button>
-
-                        <button 
-                            onClick={handleWrong}
-                            className="w-48 h-48 bg-white rounded-full border-[10px] border-red-500 text-red-500 shadow-xl hover:bg-red-50 active:scale-95 transition flex flex-col items-center justify-center group"
-                        >
+                        <button onClick={handleWrong} className="w-48 h-48 bg-white rounded-full border-[10px] border-red-500 text-red-500 shadow-xl hover:bg-red-50 active:scale-95 transition flex flex-col items-center justify-center group">
                             <Icons.X size={100} strokeWidth={5} />
                             <span className="font-black text-3xl mt-2">答錯 (X)</span>
                         </button>
                     </div>
 
-                    {/* 回饋動畫 */}
-                    {feedback === 'correct' && (
-                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-green-500 animate-ping opacity-75 pointer-events-none">
-                            <Icons.Check size={400} />
-                        </div>
-                    )}
-                    {feedback === 'wrong' && (
-                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-red-500 animate-ping opacity-75 pointer-events-none">
-                            <Icons.X size={400} />
-                        </div>
-                    )}
+                    {feedback === 'correct' && <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-green-500 animate-ping opacity-75 pointer-events-none"><Icons.Check size={400} /></div>}
+                    {feedback === 'wrong' && <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-red-500 animate-ping opacity-75 pointer-events-none"><Icons.X size={400} /></div>}
                 </div>
             );
         };
 
-        // 2. 字典查找 (Sorting) - 優化箭頭按鈕
+        // 2. 字典查找 (Multiple Choice) - 改版
         const Task2_Dict = () => {
-            const correctOrder = ["確定部首", "計算部首筆畫", "翻檢索頁碼", "計算剩餘筆畫", "查到字義"];
-            const [items, setItems] = useState([...correctOrder].sort(() => Math.random() - 0.5));
-            
-            const moveItem = (idx, dir) => {
-                const newItems = [...items];
-                const swapIdx = idx + dir;
-                if(swapIdx >= 0 && swapIdx < items.length) {
-                    [newItems[idx], newItems[swapIdx]] = [newItems[swapIdx], newItems[idx]];
-                    setItems(newItems);
-                }
-            };
+            const [answer, setAnswer] = useState(null);
+            const [showResult, setShowResult] = useState(false);
 
-            const isSuccess = JSON.stringify(items) === JSON.stringify(correctOrder);
+            const options = [
+                { id: 1, text: "重編國語辭典修訂本", isCorrect: false },
+                { id: 2, text: "國語辭典簡編本", isCorrect: false },
+                { id: 3, text: "中國哲學書電子化計劃字典", isCorrect: true },
+                { id: 4, text: "成語典", isCorrect: false }
+            ];
+
+            const handleAnswer = (isCorrect) => {
+                setAnswer(isCorrect);
+                setShowResult(true);
+            };
 
             return (
                 <div className="h-full bg-orange-50 flex flex-col items-center pt-24 px-8 slide-enter relative">
                     <LotteryWidget />
                     <h2 className="text-5xl font-bold text-orange-800 mb-6">關卡 2：字典小偵探</h2>
-                    <p className="text-3xl text-slate-600 mb-12">請依照「部首索引法」的正確順序，將步驟由上往下排列！</p>
-                    <div className="flex flex-col gap-6 w-full max-w-3xl">
-                        {items.map((item, idx) => (
-                            <div key={item} className={`flex items-center justify-between p-6 rounded-2xl text-3xl font-bold shadow-lg border-4 transition-all duration-300 ${isSuccess ? 'bg-green-100 border-green-500 text-green-800 scale-105' : 'bg-white border-orange-200 text-slate-700'}`}>
-                                <div className="flex items-center">
-                                    <span className="bg-orange-200 w-14 h-14 rounded-full flex items-center justify-center text-orange-900 mr-6 text-2xl">{idx+1}</span>
-                                    {item}
-                                </div>
-                                <div className="flex gap-4">
-                                    <button onClick={()=>moveItem(idx, -1)} disabled={idx === 0} className="p-4 bg-blue-500 text-white rounded-full shadow-md hover:bg-blue-600 hover:scale-110 transition disabled:opacity-30 disabled:cursor-not-allowed">
-                                        <Icons.ChevronUp size={32} />
-                                    </button>
-                                    <button onClick={()=>moveItem(idx, 1)} disabled={idx === items.length - 1} className="p-4 bg-blue-500 text-white rounded-full shadow-md hover:bg-blue-600 hover:scale-110 transition disabled:opacity-30 disabled:cursor-not-allowed">
-                                        <Icons.ChevronDown size={32} />
-                                    </button>
-                                </div>
-                            </div>
+                    <p className="text-3xl text-slate-600 mb-12">下列何者<span className="text-red-600 font-black">不是</span>教育部所提供的網路辭典？</p>
+                    
+                    <div className="grid grid-cols-2 gap-8 w-full max-w-6xl">
+                        {options.map((opt) => (
+                            <button 
+                                key={opt.id} 
+                                onClick={() => handleAnswer(opt.isCorrect)}
+                                disabled={showResult}
+                                className={`p-10 rounded-3xl text-3xl font-bold text-left border-[6px] transition transform hover:scale-105 ${
+                                    showResult 
+                                        ? (opt.isCorrect ? 'bg-green-100 border-green-500 text-green-800' : (answer === false && !opt.isCorrect ? 'opacity-50' : 'bg-white border-orange-200 text-slate-700'))
+                                        : 'bg-white border-orange-200 text-slate-700 hover:border-orange-400'
+                                }`}
+                            >
+                                {opt.text}
+                            </button>
                         ))}
                     </div>
-                    {isSuccess && <div className="mt-10 text-5xl font-bold text-green-600 animate-bounce">🎉 排序正確！太厲害了！</div>}
+
+                    {showResult && (
+                        <div className={`mt-12 p-8 rounded-3xl border-4 shadow-xl animate-bounce text-4xl font-bold ${answer ? 'bg-green-100 border-green-500 text-green-800' : 'bg-red-100 border-red-500 text-red-800'}`}>
+                            {answer ? "🎉 答對了！這是民間網站喔！" : "❌ 答錯囉！這是教育部的辭典。"}
+                        </div>
+                    )}
                 </div>
             );
         };
@@ -377,10 +363,11 @@
             );
         };
 
-        // 5. 故事排序 (Timeline) - 優化箭頭按鈕
+        // 5. 故事排序 (Timeline) - 包含解答按鈕
         const Task5_Timeline = () => {
             const correct = ["聽老師說故事", "做家事存錢", "捐款給基金會", "去烏干達看水井"];
             const [seq, setSeq] = useState(["捐款給基金會", "聽老師說故事", "去烏干達看水井", "做家事存錢"]);
+            const [showSolution, setShowSolution] = useState(false);
             
             const swap = (i, j) => {
                 if(j<0 || j>=seq.length) return;
@@ -395,26 +382,50 @@
                     <LotteryWidget />
                     <h2 className="text-5xl font-bold text-indigo-800 mb-6">關卡 5：時光回溯器</h2>
                     <p className="text-3xl text-slate-600 mb-16">請依時間先後，重組萊恩的故事！</p>
-                    <div className="flex gap-8 items-center">
-                        {seq.map((item, i) => (
-                            <div key={i} className="flex flex-col items-center">
-                                <div className={`w-64 h-64 flex items-center justify-center p-6 text-center text-3xl font-bold rounded-[2rem] border-[6px] shadow-xl transition-all duration-500 ${isDone ? 'bg-green-100 border-green-500 text-green-800 scale-110' : 'bg-white border-indigo-200 text-indigo-900'}`}>
-                                    {item}
-                                </div>
-                                {!isDone && (
-                                    <div className="flex gap-4 mt-6">
-                                        <button onClick={()=>swap(i, i-1)} disabled={i===0} className="p-4 bg-indigo-500 text-white rounded-full shadow-lg hover:bg-indigo-600 hover:scale-110 transition disabled:opacity-30 disabled:cursor-not-allowed">
-                                            <Icons.ChevronLeft size={36} />
-                                        </button>
-                                        <button onClick={()=>swap(i, i+1)} disabled={i===seq.length-1} className="p-4 bg-indigo-500 text-white rounded-full shadow-lg hover:bg-indigo-600 hover:scale-110 transition disabled:opacity-30 disabled:cursor-not-allowed">
-                                            <Icons.ChevronRight size={36} />
-                                        </button>
+                    
+                    <div className="flex flex-col items-center w-full">
+                        <div className="flex gap-8 items-center mb-12">
+                            {seq.map((item, i) => (
+                                <div key={i} className="flex flex-col items-center">
+                                    <div className={`w-64 h-64 flex items-center justify-center p-6 text-center text-3xl font-bold rounded-[2rem] border-[6px] shadow-xl transition-all duration-500 ${isDone ? 'bg-green-100 border-green-500 text-green-800 scale-110' : 'bg-white border-indigo-200 text-indigo-900'}`}>
+                                        {item}
                                     </div>
-                                )}
+                                    {!isDone && !showSolution && (
+                                        <div className="flex gap-4 mt-6">
+                                            <button onClick={()=>swap(i, i-1)} disabled={i===0} className="p-4 bg-indigo-500 text-white rounded-full shadow-lg hover:bg-indigo-600 hover:scale-110 transition disabled:opacity-30 disabled:cursor-not-allowed">
+                                                <Icons.ChevronLeft size={36} />
+                                            </button>
+                                            <button onClick={()=>swap(i, i+1)} disabled={i===seq.length-1} className="p-4 bg-indigo-500 text-white rounded-full shadow-lg hover:bg-indigo-600 hover:scale-110 transition disabled:opacity-30 disabled:cursor-not-allowed">
+                                                <Icons.ChevronRight size={36} />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        {showSolution && (
+                            <div className="w-full max-w-4xl bg-white border-4 border-indigo-400 p-8 rounded-3xl shadow-2xl animate-fade-in text-center">
+                                <h3 className="text-3xl font-black text-indigo-700 mb-6">💡 故事時序詳解</h3>
+                                <div className="grid grid-cols-4 gap-4 text-xl font-bold text-slate-700">
+                                    <div className="bg-indigo-50 p-4 rounded-xl">1. 聽老師說故事<br/><span className="text-sm text-indigo-500">(發現問題)</span></div>
+                                    <div className="bg-indigo-50 p-4 rounded-xl">2. 做家事存錢<br/><span className="text-sm text-indigo-500">(開始行動)</span></div>
+                                    <div className="bg-indigo-50 p-4 rounded-xl">3. 捐款給基金會<br/><span className="text-sm text-indigo-500">(達成目標)</span></div>
+                                    <div className="bg-indigo-50 p-4 rounded-xl">4. 去烏干達看水井<br/><span className="text-sm text-indigo-500">(見證成果)</span></div>
+                                </div>
+                                <p className="mt-4 text-lg text-slate-500">這完全符合 DFC 的歷程：感受 ➝ 想像 ➝ 實踐 ➝ 分享！</p>
                             </div>
-                        ))}
+                        )}
+
+                        <div className="mt-8 flex gap-6">
+                            {!showSolution && (
+                                <button onClick={()=>setShowSolution(true)} className="bg-indigo-500 text-white px-10 py-4 rounded-full text-2xl font-bold hover:bg-indigo-600 shadow-lg transition transform hover:scale-105">
+                                    回答完成 (顯示詳解)
+                                </button>
+                            )}
+                            {isSuccess && <div className="text-5xl font-bold text-green-600 animate-bounce py-2">👏 故事重組成功！</div>}
+                        </div>
                     </div>
-                    {isDone && <div className="mt-16 text-5xl font-bold text-green-600 animate-bounce">👏 故事重組成功！</div>}
                 </div>
             );
         };
@@ -452,7 +463,6 @@
                     <h2 className="text-5xl font-bold text-pink-800 mb-6">關卡 6：DFC 行動解碼</h2>
                     <p className="text-3xl text-slate-600 mb-12">請點選下方的具體行動，再點選上方對應的步驟！</p>
                     
-                    {/* Error Message */}
                     {errorMsg && (
                         <div className="absolute top-40 z-50 bg-red-100 border-l-8 border-red-500 text-red-700 p-6 rounded-r-xl shadow-2xl animate-bounce flex items-center gap-4">
                             <Icons.AlertTriangle size={40} />
@@ -460,7 +470,6 @@
                         </div>
                     )}
                     
-                    {/* Targets */}
                     <div className="flex gap-8 mb-16">
                         {options.map(o => (
                             <div key={o.id} onClick={()=>handleMatch(o.id)} className={`w-64 h-40 rounded-3xl border-[6px] border-dashed flex items-center justify-center text-4xl font-bold cursor-pointer transition transform hover:scale-105 ${matches[o.id] ? 'bg-pink-200 border-pink-500 text-pink-800 border-solid' : 'bg-white/50 border-pink-300 text-slate-400 hover:bg-white hover:border-pink-400'}`}>
@@ -469,7 +478,6 @@
                         ))}
                     </div>
 
-                    {/* Sources */}
                     <div className="flex gap-8 flex-wrap justify-center">
                         {options.map(o => !matches[o.id] && (
                             <button key={o.id} onClick={()=>setCurrent(o)} className={`px-10 py-8 bg-white rounded-2xl shadow-xl text-3xl font-bold border-4 border-slate-200 hover:border-pink-500 hover:text-pink-600 hover:-translate-y-2 transition ${current?.id===o.id ? 'ring-8 ring-pink-300 border-pink-500' : ''}`}>
